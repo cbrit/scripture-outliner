@@ -314,7 +314,6 @@ export function mount(root: HTMLElement): void {
     const endBox = endEl.getBoundingClientRect();
     const rangeTop = Math.min(startBox.top, endBox.top);
     const rangeBottom = Math.max(startBox.bottom, endBox.bottom);
-    const rangeLeft = Math.min(startBox.left, endBox.left);
     const toolbar = refs.selectionToolbar;
     const toolbarW = Math.max(toolbar.offsetWidth, 220);
     const toolbarH = Math.max(toolbar.offsetHeight, 44);
@@ -325,12 +324,18 @@ export function mount(root: HTMLElement): void {
       top = rangeBottom - origin.top + 8;
       placement = "below";
     }
-    let left = rangeLeft - origin.left;
+    const pinCenterX = (startBox.left + startBox.right) / 2 - origin.left;
+    // Keep the hint off the start pin and off the following line of words.
+    const pinClear = 26;
+    let left = pinCenterX + pinClear;
     if (left + toolbarW > wrap.clientWidth - pad) {
-      left = wrap.clientWidth - toolbarW - pad;
+      left = pinCenterX - pinClear - toolbarW;
     }
     if (left < pad) {
       left = pad;
+    }
+    if (left + toolbarW > wrap.clientWidth - pad) {
+      left = wrap.clientWidth - toolbarW - pad;
     }
     toolbar.style.left = `${left}px`;
     toolbar.style.top = `${top}px`;

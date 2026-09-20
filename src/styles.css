@@ -370,7 +370,7 @@ button.danger {
   background: transparent;
   padding: 0;
   touch-action: none;
-  z-index: 8;
+  z-index: 6;
 }
 
 .pin[hidden] {
