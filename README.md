@@ -6,7 +6,9 @@ One document at a time. It lives in `localStorage` on this device.
 
 **Open on a phone:** https://cbrit.github.io/scripture-outliner/
 
-That URL is the app under the `scripture-outliner/` subdirectory only. It does not replace `https://cbrit.github.io/` and does not use the Whatley Solutions / Whatley Brothers Pages sites. Project Pages on this private repo could not be enabled from the deploy agent (`pages` API 403).
+That URL is the user-site subdirectory (`cbrit.github.io` → `/scripture-outliner/` only). It does not replace `https://cbrit.github.io/` and does not use the Whatley Solutions / Whatley Brothers Pages sites.
+
+Project Pages from this repo (same path once public) is the preferred host. `.github/workflows/pages.yml` builds with `VITE_BASE=/scripture-outliner/` and deploys via Actions on push to `main`. The deploy agent cannot make this repository public or enable Pages (`visibility` / `pages` API 403: *Resource not accessible by integration*). Until the owner sets the repo to **public** and Pages source to **GitHub Actions**, use the user-site URL above.
 
 ## Verification
 
