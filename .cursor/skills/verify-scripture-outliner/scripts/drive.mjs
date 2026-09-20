@@ -195,41 +195,62 @@ async function driveWordSelection(page) {
   return { selected: rangeCount, filledGaps, after };
 }
 
+async function waitForExactSegment(page) {
+  await page.waitForFunction(() => {
+    const del = document.querySelector('[data-testid="action-delete"]');
+    return del instanceof HTMLButtonElement && !del.disabled;
+  });
+}
+
 async function driveSectionDeeperSummary(page) {
   await driveImportSample(page);
   await page.getByTestId("word").nth(1).click();
   await page.getByTestId("word").nth(6).click();
   await page.getByTestId("action-section").click();
-  await page.getByTestId("section-header").first().waitFor();
-  const sectionCount = await page.getByTestId("section-header").count();
-  if (sectionCount < 1) {
-    throw new Error("Section did not create an inline header");
+  await waitForExactSegment(page);
+  const afterSectionCount = await page.getByTestId("section-header").count();
+  if (afterSectionCount !== 0) {
+    throw new Error(`Section must not show a header, got ${afterSectionCount}`);
   }
-  const placeholder = await page
-    .locator('[data-testid="section-header"][data-placeholder="true"]')
-    .count();
-  if (placeholder < 1) {
-    throw new Error("Empty section should show a placeholder header");
-  }
+  const afterSection = await snapshot(
+    page,
+    path.join(evidenceRoot, "section-deeper-summary"),
+    "after-section",
+    { step: "section-no-header", headers: afterSectionCount },
+  );
   await page.getByTestId("word").nth(3).click();
   await page.getByTestId("word").nth(5).click();
   await page.getByTestId("action-deeper").click();
-  const depths = await headerDepths(page);
-  if (!depths.includes("0") || !depths.includes("1")) {
-    throw new Error(`Expected depth 0 and 1 headers, got ${JSON.stringify(depths)}`);
+  await waitForExactSegment(page);
+  const afterDeeperCount = await page.getByTestId("section-header").count();
+  if (afterDeeperCount !== 0) {
+    throw new Error(`Deeper must not show a header, got ${afterDeeperCount}`);
   }
   await saveSummary(page, "Shepherd care");
+  await page.getByTestId("section-header").first().waitFor();
+  const depths = await headerDepths(page);
+  if (depths.length !== 1 || depths[0] !== "1") {
+    throw new Error(`Expected only the depth-1 summary header, got ${JSON.stringify(depths)}`);
+  }
   const summaries = await page.getByTestId("section-header").evaluateAll((headers) =>
     headers.map((header) => header.textContent ?? ""),
   );
   if (!summaries.some((value) => value.includes("Shepherd care"))) {
     throw new Error(`Summary did not persist in header, got ${JSON.stringify(summaries)}`);
   }
-  const after = await snapshot(page, path.join(evidenceRoot, "section-deeper-summary"), "outline", {
-    depths,
-    summaries,
-  });
-  return { depths, summaries, after };
+  const placeholder = await page
+    .locator('[data-testid="section-header"][data-placeholder="true"]')
+    .count();
+  if (placeholder !== 0) {
+    throw new Error("Summary header must not be a placeholder");
+  }
+  const afterSummary = await snapshot(
+    page,
+    path.join(evidenceRoot, "section-deeper-summary"),
+    "after-summary",
+    { depths, summaries },
+  );
+  return { depths, summaries, afterSection, afterSummary };
 }
 
 async function driveInlineOutline(page) {
@@ -240,18 +261,30 @@ async function driveInlineOutline(page) {
   await clickWordId(page, 0);
   await clickWordId(page, 24);
   await page.getByTestId("action-section").click();
-  await page.locator('[data-testid="section-header"][data-depth="0"]').waitFor();
+  await waitForExactSegment(page);
+  if ((await page.getByTestId("section-header").count()) !== 0) {
+    throw new Error("Section must not show a header before Summary");
+  }
   await saveSummary(page, "The LORD is shepherd");
+  await page.locator('[data-testid="section-header"][data-depth="0"]').waitFor();
   await clickWordId(page, 9);
   await clickWordId(page, 24);
   await page.getByTestId("action-deeper").click();
-  await page.locator('[data-testid="section-header"][data-depth="1"]').waitFor();
+  await waitForExactSegment(page);
+  if ((await page.getByTestId("section-header").count()) !== 1) {
+    throw new Error("Deeper must not add a header before Summary");
+  }
   await saveSummary(page, "Green pastures");
+  await page.locator('[data-testid="section-header"][data-depth="1"]').waitFor();
   await clickWordId(page, 18);
   await clickWordId(page, 24);
   await page.getByTestId("action-deeper").click();
-  await page.locator('[data-testid="section-header"][data-depth="2"]').waitFor();
+  await waitForExactSegment(page);
+  if ((await page.getByTestId("section-header").count()) !== 2) {
+    throw new Error("Second Deeper must not add a header before Summary");
+  }
   await saveSummary(page, "Still waters");
+  await page.locator('[data-testid="section-header"][data-depth="2"]').waitFor();
   await page.getByTestId("action-clear").click();
   await page.evaluate(() => {
     window.scrollTo(0, 0);
@@ -299,7 +332,10 @@ async function drivePersistence(page) {
   await driveImportSample(page);
   await page.getByTestId("word").nth(1).click();
   await page.getByTestId("action-section").click();
-  await page.getByTestId("section-header").first().waitFor();
+  await waitForExactSegment(page);
+  if ((await page.getByTestId("section-header").count()) !== 0) {
+    throw new Error("Section must not show a header before Summary");
+  }
   const stored = await page.evaluate(() => localStorage.getItem("scripture-outliner.document.v1"));
   if (!stored) {
     throw new Error("localStorage key scripture-outliner.document.v1 was empty after Section");
@@ -311,12 +347,15 @@ async function drivePersistence(page) {
   if (typeof parsed.segments[0].depth !== "number") {
     throw new Error("Stored segment depth was not a number");
   }
+  await saveSummary(page, "Shepherd care");
+  await page.getByTestId("section-header").first().waitFor();
   await page.reload({ waitUntil: "networkidle" });
   await page.getByTestId("passage").waitFor({ state: "visible" });
   const title = await page.getByTestId("title-input").inputValue();
   const headers = await page.getByTestId("section-header").count();
-  if (!title.includes("Sample") || headers < 1) {
-    throw new Error(`Reload lost document (title=${title} headers=${headers})`);
+  const headerText = (await page.getByTestId("section-header").first().textContent()) ?? "";
+  if (!title.includes("Sample") || headers < 1 || !headerText.includes("Shepherd care")) {
+    throw new Error(`Reload lost document (title=${title} headers=${headers} text=${headerText})`);
   }
   const after = await snapshot(page, path.join(evidenceRoot, "persistence"), "reload", {
     title,
