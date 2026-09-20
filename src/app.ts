@@ -11,7 +11,6 @@ import {
   createDocument,
   createSegment,
   exactSegment,
-  headerLabel,
   highlightDepthForWord,
   innermostCoveringSegment,
   insertSegment,
@@ -33,6 +32,7 @@ type Refs = {
   importText: HTMLTextAreaElement;
   editor: HTMLElement;
   paneText: HTMLElement;
+  passageWrap: HTMLElement;
   passage: HTMLElement;
   pinStart: HTMLButtonElement;
   pinEnd: HTMLButtonElement;
@@ -43,6 +43,11 @@ type Refs = {
   summaryField: HTMLTextAreaElement;
 };
 
+type PendingTap =
+  | { kind: "word"; id: WordId; x: number; y: number }
+  | { kind: "header"; id: string; x: number; y: number }
+  | { kind: "empty"; x: number; y: number };
+
 const SEG_CLASSES = ["seg-0", "seg-1", "seg-2", "seg-3"] as const;
 const HIGHLIGHT_CLASSES = ["selected", ...SEG_CLASSES] as const;
 
@@ -52,6 +57,7 @@ export function mount(root: HTMLElement): void {
   let doc = loadDocument();
   let extendFrom: WordId | null = null;
   let dragging: PinEdge | null = null;
+  let pendingTap: PendingTap | null = null;
   let builtKey = "";
 
   function persist(): void {
@@ -221,7 +227,7 @@ export function mount(root: HTMLElement): void {
     for (const part of parts) {
       switch (part.kind) {
         case "header": {
-          refs.passage.append(sectionHeader(current, part.segment));
+          refs.passage.append(sectionHeader(part.segment));
           break;
         }
         case "words": {
@@ -643,50 +649,72 @@ export function mount(root: HTMLElement): void {
   root.querySelector("[data-export]")?.addEventListener("click", exportOutline);
   root.querySelector("[data-new]")?.addEventListener("click", newDocument);
 
-  refs.passage.addEventListener("pointerdown", (event) => {
-    if (dragging) {
+  function beginTap(event: PointerEvent): void {
+    if (dragging || isSelectionChrome(event)) {
       return;
     }
+    const x = event.clientX;
+    const y = event.clientY;
     const header = headerFromEvent(event);
     if (header) {
-      refs.passage.dataset.tapHeader = header;
-      refs.passage.dataset.tapX = String(event.clientX);
-      refs.passage.dataset.tapY = String(event.clientY);
-      delete refs.passage.dataset.tapId;
+      pendingTap = { kind: "header", id: header, x, y };
       return;
     }
     const word = wordIdFromEvent(event);
-    if (word === null) {
+    if (word !== null) {
+      pendingTap = { kind: "word", id: word, x, y };
       return;
     }
-    refs.passage.dataset.tapX = String(event.clientX);
-    refs.passage.dataset.tapY = String(event.clientY);
-    refs.passage.dataset.tapId = String(word);
-    delete refs.passage.dataset.tapHeader;
+    if (isInlineText(event)) {
+      pendingTap = null;
+      return;
+    }
+    pendingTap = { kind: "empty", x, y };
+  }
+
+  function endTap(event: PointerEvent): void {
+    const tap = pendingTap;
+    pendingTap = null;
+    if (!tap) {
+      return;
+    }
+    if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 14) {
+      return;
+    }
+    switch (tap.kind) {
+      case "word":
+        onWordTap(tap.id);
+        return;
+      case "header":
+        selectSegmentById(tap.id);
+        return;
+      case "empty":
+        clearSelection();
+        return;
+      default: {
+        const _exhaustive: never = tap;
+        assertNever(_exhaustive);
+      }
+    }
+  }
+
+  function onPaneOrWrapPointerDown(event: PointerEvent): void {
+    // Pane padding is the only hit that does not bubble through the wrap.
+    if (event.currentTarget === refs.paneText && event.target !== refs.paneText) {
+      return;
+    }
+    beginTap(event);
+  }
+
+  refs.passageWrap.addEventListener("pointerdown", onPaneOrWrapPointerDown);
+  refs.passageWrap.addEventListener("pointerup", endTap);
+  refs.passageWrap.addEventListener("pointercancel", () => {
+    pendingTap = null;
   });
-  refs.passage.addEventListener("pointerup", (event) => {
-    const tapX = Number(refs.passage.dataset.tapX);
-    const tapY = Number(refs.passage.dataset.tapY);
-    const headerId = refs.passage.dataset.tapHeader;
-    const rawId = refs.passage.dataset.tapId;
-    delete refs.passage.dataset.tapId;
-    delete refs.passage.dataset.tapX;
-    delete refs.passage.dataset.tapY;
-    delete refs.passage.dataset.tapHeader;
-    if (Number.isNaN(tapX) || Number.isNaN(tapY)) {
-      return;
-    }
-    if (Math.hypot(event.clientX - tapX, event.clientY - tapY) > 14) {
-      return;
-    }
-    if (headerId) {
-      selectSegmentById(headerId);
-      return;
-    }
-    if (rawId === undefined) {
-      return;
-    }
-    onWordTap(Number(rawId));
+  refs.paneText.addEventListener("pointerdown", onPaneOrWrapPointerDown);
+  refs.paneText.addEventListener("pointerup", endTap);
+  refs.paneText.addEventListener("pointercancel", () => {
+    pendingTap = null;
   });
 
   bindPin(refs.pinStart, "start");
@@ -785,6 +813,7 @@ function bind(root: HTMLElement): Refs {
     importText: requireEl(root, "[data-import-text]", HTMLTextAreaElement),
     editor: requireEl(root, "[data-editor]", HTMLElement),
     paneText: requireEl(root, "[data-pane-text]", HTMLElement),
+    passageWrap: requireEl(root, "[data-passage-wrap]", HTMLElement),
     passage: requireEl(root, "[data-passage]", HTMLElement),
     pinStart: requireEl(root, "[data-pin-start]", HTMLButtonElement),
     pinEnd: requireEl(root, "[data-pin-end]", HTMLButtonElement),
@@ -821,7 +850,7 @@ function shellHtml(): string {
         </section>
         <section class="editor" hidden data-editor data-testid="editor">
           <div class="pane pane-text" data-pane-text data-testid="pane-text">
-            <div class="passage-wrap">
+            <div class="passage-wrap" data-passage-wrap data-testid="passage-wrap">
               <div class="passage" data-passage data-testid="passage"></div>
               <button type="button" class="pin pin-start" data-pin-start data-testid="pin-start" hidden aria-label="Selection start"></button>
               <button type="button" class="pin pin-end" data-pin-end data-testid="pin-end" hidden aria-label="Selection end"></button>
@@ -861,21 +890,14 @@ function shellHtml(): string {
   `;
 }
 
-function sectionHeader(
-  doc: Document,
-  segment: Document["segments"][number],
-): HTMLElement {
+function sectionHeader(segment: Document["segments"][number]): HTMLElement {
   const level = Math.min(6, Math.max(2, segment.depth + 2));
   const el = document.createElement(`h${level}`);
   el.className = "section-header";
   el.dataset.depth = String(segment.depth);
   el.dataset.segmentId = segment.id;
   el.setAttribute("data-testid", "section-header");
-  const label = headerLabel(doc.passage.words, segment);
-  el.textContent = label.text;
-  if (label.placeholder) {
-    el.dataset.placeholder = "true";
-  }
+  el.textContent = segment.summary.trim();
   return el;
 }
 
@@ -950,6 +972,26 @@ function appendBreak(
       return _exhaustive;
     }
   }
+}
+
+function isSelectionChrome(event: Event): boolean {
+  const target = event.target;
+  if (!(target instanceof Element)) {
+    return false;
+  }
+  return (
+    target.closest(
+      "[data-pin-start], [data-pin-end], [data-selection-toolbar], button, a, input, textarea",
+    ) !== null
+  );
+}
+
+function isInlineText(event: Event): boolean {
+  const target = event.target;
+  if (!(target instanceof Element)) {
+    return false;
+  }
+  return target.closest(".gap") !== null;
 }
 
 function wordIdFromEvent(event: Event): WordId | null {

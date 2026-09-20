@@ -314,10 +314,6 @@ button.danger {
   padding-left: calc(6 * var(--indent));
 }
 
-.section-header[data-placeholder="true"] {
-  color: var(--muted);
-}
-
 .section-header[aria-current="true"] {
   text-decoration: underline;
   text-decoration-thickness: 2px;

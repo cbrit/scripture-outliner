@@ -58,7 +58,7 @@ Install and the service worker require a secure context: `localhost` or HTTPS.
 
 1. Paste text, or tap **Load sample**.
 2. Tap a word to select it. Tap a second word to extend the range. Drag the two pins; they snap to word edges only.
-3. **Section** marks a depth-0 heading for the range. **Deeper** / **Shallower** change nesting. **Summary** edits the bold header (empty still shows a placeholder snippet).
+3. **Section** marks a depth-0 range. **Deeper** / **Shallower** change nesting. **Summary** writes the bold header. A header appears only after a non-empty Summary.
 4. Headers sit in the passage above their body. Nested ranges start on a new line and indent by depth.
 5. Reload: the current document is restored from `localStorage`. **Export** downloads Markdown with ATX headers by depth (and copies it when the clipboard is available).
 
@@ -70,8 +70,8 @@ Use device mode at **390×844** (or an actual phone). After `npm run dev`:
 2. Tap **The**. Selection is that word only; start and end pins sit on its edges.
 3. Tap **want.** The range is word-aligned (`The` … `want.`), not a character highlight.
 4. Drag the end pin onto **shepherd;** — it snaps to that word, never mid-token.
-5. **Section**, then select an inner phrase and **Deeper**. A bold header appears above the section; the subsection starts on its own indented line.
-6. **Deeper** again on a still-inner range (depth 2). **Summary**, type a sentence, Save. The header shows your text; an empty header keeps a bold snippet placeholder.
+5. **Section**, then select an inner phrase and **Deeper**. No header yet. The subsection starts on its own indented line.
+6. **Deeper** again on a still-inner range (depth 2). **Summary**, type a sentence, Save. The bold header appears above that range. Empty summaries do not render a header.
 7. Highlights use stacked shades; selection fill stays one continuous bar. There is no Text / Outline / Split toggle.
 8. Reload the tab. Title, nested segments, and summaries return.
 9. **Export** produces a `.md` file with `#` title and `##` / `###` / `####` outline headings.
