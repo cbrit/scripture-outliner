@@ -3,7 +3,7 @@
  * Drive Scripture Outliner in Chrome via Playwright against the launched preview.
  *
  * Usage: node drive.mjs <feature-id>
- * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence
+ * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -411,6 +411,101 @@ async function driveInlineOutline(page) {
   return { depths, texts, before, after };
 }
 
+async function selectedWordIds(page) {
+  return page.locator('[data-testid="word"].selected').evaluateAll((words) =>
+    words.map((word) => Number(word.getAttribute("data-word-id"))),
+  );
+}
+
+async function storedFirstSegment(page) {
+  return page.evaluate(() => {
+    const raw = localStorage.getItem("scripture-outliner.document.v1");
+    if (!raw) {
+      throw new Error("localStorage key scripture-outliner.document.v1 was empty");
+    }
+    const parsed = JSON.parse(raw);
+    const segment = parsed.segments?.[0];
+    if (!segment || typeof segment.start !== "number" || typeof segment.end !== "number") {
+      throw new Error("Stored document had no first segment range");
+    }
+    return { start: segment.start, end: segment.end, summary: segment.summary ?? "" };
+  });
+}
+
+async function driveHeaderSelect(page) {
+  await driveImportSample(page);
+  await clickWordId(page, 0);
+  await clickWordId(page, 8);
+  await page.getByTestId("action-section").click();
+  await waitForExactSegment(page);
+  if ((await page.getByTestId("section-header").count()) !== 0) {
+    throw new Error("Section must not show a header before Summary");
+  }
+  await saveSummary(page, "The LORD is shepherd");
+  await page.getByTestId("section-header").first().waitFor();
+  const segment = await storedFirstSegment(page);
+  if (segment.start !== 0 || segment.end !== 8 || !segment.summary.includes("The LORD is shepherd")) {
+    throw new Error(`Unexpected stored segment: ${JSON.stringify(segment)}`);
+  }
+  await page.getByTestId("action-clear").click();
+  const clearedIds = await selectedWordIds(page);
+  if (clearedIds.length !== 0) {
+    throw new Error(`Expected no selected words after Clear, got ${JSON.stringify(clearedIds)}`);
+  }
+  const header = page.getByTestId("section-header").first();
+  const headerText = (await header.textContent()) ?? "";
+  if (!headerText.includes("The LORD is shepherd")) {
+    throw new Error(`Expected summary header, got ${JSON.stringify(headerText)}`);
+  }
+  const before = await snapshot(page, path.join(evidenceRoot, "header-select"), "cleared", {
+    step: "cleared",
+    segment,
+    selected: clearedIds,
+  });
+  await header.scrollIntoViewIfNeeded();
+  await header.click();
+  const selectedIds = await selectedWordIds(page);
+  const expectedCount = segment.end - segment.start + 1;
+  if (selectedIds.length !== expectedCount) {
+    throw new Error(`Expected ${expectedCount} selected words, got ${JSON.stringify(selectedIds)}`);
+  }
+  const first = selectedIds[0];
+  const last = selectedIds[selectedIds.length - 1];
+  if (first !== segment.start || last !== segment.end) {
+    throw new Error(
+      `Selection ${first}–${last} did not match segment ${segment.start}–${segment.end}`,
+    );
+  }
+  const missing = [];
+  for (let id = segment.start; id <= segment.end; id += 1) {
+    if (!selectedIds.includes(id)) {
+      missing.push(id);
+    }
+  }
+  if (missing.length) {
+    throw new Error(`Selection skipped word ids ${JSON.stringify(missing)}`);
+  }
+  const ariaCurrent = await header.getAttribute("aria-current");
+  if (ariaCurrent === null) {
+    throw new Error("Header should have aria-current after its range is selected");
+  }
+  if (!(await page.getByTestId("selection-toolbar").isVisible())) {
+    throw new Error("Selection toolbar should be visible after a header tap");
+  }
+  const startHidden = await page.getByTestId("pin-start").getAttribute("hidden");
+  const endHidden = await page.getByTestId("pin-end").getAttribute("hidden");
+  if (startHidden !== null || endHidden !== null) {
+    throw new Error("Pins should be visible after a header tap");
+  }
+  const after = await snapshot(page, path.join(evidenceRoot, "header-select"), "selected", {
+    step: "header-selected",
+    segment,
+    selected: selectedIds,
+    ariaCurrent,
+  });
+  return { segment, selected: selectedIds, ariaCurrent, before, after };
+}
+
 async function drivePersistence(page) {
   await driveImportSample(page);
   await page.getByTestId("word").nth(1).click();
@@ -455,6 +550,7 @@ const drivers = {
   "section-deeper-summary": driveSectionDeeperSummary,
   "inline-outline": driveInlineOutline,
   persistence: drivePersistence,
+  "header-select": driveHeaderSelect,
 };
 
 ensurePlaywright();

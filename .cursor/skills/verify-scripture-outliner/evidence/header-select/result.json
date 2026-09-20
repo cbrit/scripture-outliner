@@ -1,0 +1,36 @@
+{
+  "feature": "header-select",
+  "url": "http://127.0.0.1:4174/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "segment": {
+      "start": 0,
+      "end": 8,
+      "summary": "The LORD is shepherd"
+    },
+    "selected": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "ariaCurrent": "",
+    "before": {
+      "png": "evidence/header-select/cleared.png",
+      "aria": "evidence/header-select/cleared.aria.txt"
+    },
+    "after": {
+      "png": "evidence/header-select/selected.png",
+      "aria": "evidence/header-select/selected.aria.txt"
+    }
+  },
+  "at": "2026-09-20T22:23:56.794Z"
+}
