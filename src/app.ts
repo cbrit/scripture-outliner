@@ -36,7 +36,6 @@ type Refs = {
   passage: HTMLElement;
   pinStart: HTMLButtonElement;
   pinEnd: HTMLButtonElement;
-  actionBar: HTMLElement;
   hint: HTMLElement;
   selectionToolbar: HTMLElement;
   summaryDialog: HTMLDialogElement;
@@ -50,6 +49,12 @@ type PendingTap =
 
 const SEG_CLASSES = ["seg-0", "seg-1", "seg-2", "seg-3"] as const;
 const HIGHLIGHT_CLASSES = ["selected", ...SEG_CLASSES] as const;
+
+const ICON_SECTION = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M7 5v14M17 5v14M7 12h10"/></svg>`;
+const ICON_DEEPER = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M6 5h12M10 10h8M10 10v8M7 15l3 3 3-3"/></svg>`;
+const ICON_SHALLOWER = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M6 19h12M10 14h8M10 14V6M7 9l3-3 3 3"/></svg>`;
+const ICON_SUMMARY = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 9h8M8 13h6"/></svg>`;
+const ICON_DELETE = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M7 7l10 10M17 7 7 17"/></svg>`;
 
 export function mount(root: HTMLElement): void {
   root.innerHTML = shellHtml();
@@ -87,7 +92,6 @@ export function mount(root: HTMLElement): void {
       refs.titleInput.value = "";
       refs.titleInput.disabled = true;
       refs.titleInput.hidden = true;
-      refs.actionBar.hidden = true;
       refs.hint.hidden = true;
       refs.selectionToolbar.hidden = true;
       refs.pinStart.hidden = true;
@@ -251,16 +255,14 @@ export function mount(root: HTMLElement): void {
 
   function renderActions(): void {
     if (!doc || !doc.selection) {
-      refs.actionBar.hidden = true;
       refs.selectionToolbar.hidden = true;
       refs.hint.hidden = !doc;
       return;
     }
     refs.hint.hidden = true;
-    refs.actionBar.hidden = false;
     refs.selectionToolbar.hidden = false;
     const matched = exactSegment(doc.segments, doc.selection);
-    const del = refs.actionBar.querySelector("[data-delete]");
+    const del = refs.selectionToolbar.querySelector("[data-delete]");
     if (del instanceof HTMLButtonElement) {
       del.disabled = !matched;
     }
@@ -321,7 +323,7 @@ export function mount(root: HTMLElement): void {
     const rangeTop = Math.min(startBox.top, endBox.top);
     const rangeBottom = Math.max(startBox.bottom, endBox.bottom);
     const toolbar = refs.selectionToolbar;
-    const toolbarW = Math.max(toolbar.offsetWidth, 220);
+    const toolbarW = Math.max(toolbar.offsetWidth, 248);
     const toolbarH = Math.max(toolbar.offsetHeight, 44);
     const pad = 6;
     let top = rangeTop - origin.top - toolbarH - 8;
@@ -760,11 +762,7 @@ export function mount(root: HTMLElement): void {
     "click",
     openSummary,
   );
-  refs.actionBar.querySelector("[data-clear]")?.addEventListener(
-    "click",
-    clearSelection,
-  );
-  refs.actionBar.querySelector("[data-delete]")?.addEventListener(
+  refs.selectionToolbar.querySelector("[data-delete]")?.addEventListener(
     "click",
     deleteSelectedSegment,
   );
@@ -817,7 +815,6 @@ function bind(root: HTMLElement): Refs {
     passage: requireEl(root, "[data-passage]", HTMLElement),
     pinStart: requireEl(root, "[data-pin-start]", HTMLButtonElement),
     pinEnd: requireEl(root, "[data-pin-end]", HTMLButtonElement),
-    actionBar: requireEl(root, "[data-action-bar]", HTMLElement),
     hint: requireEl(root, "[data-hint]", HTMLElement),
     selectionToolbar: requireEl(root, "[data-selection-toolbar]", HTMLElement),
     summaryDialog: requireEl(root, "[data-summary-dialog]", HTMLDialogElement),
@@ -860,19 +857,15 @@ function shellHtml(): string {
                 data-testid="selection-toolbar"
                 hidden
               >
-                <button type="button" data-section data-testid="action-section" aria-label="Section" title="Section">Section</button>
-                <button type="button" data-deeper data-testid="action-deeper" aria-label="Deeper" title="Deeper">Deeper</button>
-                <button type="button" data-shallower data-testid="action-shallower" aria-label="Shallower" title="Shallower">Shallower</button>
-                <button type="button" data-summary data-testid="action-summary" aria-label="Summary" title="Summary">Summary</button>
+                <button type="button" data-section data-testid="action-section" aria-label="Section" title="Section">${ICON_SECTION}</button>
+                <button type="button" data-deeper data-testid="action-deeper" aria-label="Deeper" title="Deeper">${ICON_DEEPER}</button>
+                <button type="button" data-shallower data-testid="action-shallower" aria-label="Shallower" title="Shallower">${ICON_SHALLOWER}</button>
+                <button type="button" data-summary data-testid="action-summary" aria-label="Summary" title="Summary">${ICON_SUMMARY}</button>
+                <span class="toolbar-sep" aria-hidden="true"></span>
+                <button type="button" data-delete data-testid="action-delete" aria-label="Delete" title="Delete">${ICON_DELETE}</button>
               </div>
             </div>
-            <p class="hint" data-hint data-testid="selection-hint">Tap a word to select. Tap a second word to extend. Drag the pins to snap.</p>
-          </div>
-          <div class="action-bar" data-action-bar data-testid="action-bar" hidden>
-            <div class="action-secondary">
-              <button type="button" class="secondary" data-clear data-testid="action-clear">Clear</button>
-              <button type="button" class="danger" data-delete data-testid="action-delete">Delete</button>
-            </div>
+            <p class="hint" data-hint data-testid="selection-hint">Tap a word to select. Tap a second word to extend. Drag the pins. Tap the margin to deselect.</p>
           </div>
         </section>
       </main>

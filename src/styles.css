@@ -211,7 +211,7 @@ button.danger {
 .pane-text {
   position: relative;
   flex: 1;
-  padding: 16px 16px 8px;
+  padding: 16px 16px calc(16px + var(--safe-bottom));
 }
 
 .passage-wrap {
@@ -428,28 +428,6 @@ button.danger {
   transform: translateY(-50%);
 }
 
-.action-bar {
-  flex-shrink: 0;
-  display: block;
-  padding: 8px 12px calc(10px + var(--safe-bottom));
-  background: color-mix(in srgb, var(--paper) 88%, white);
-  border-top: 1px solid var(--line);
-}
-
-.action-bar[hidden] {
-  display: none;
-}
-
-.action-secondary {
-  display: flex;
-  gap: 8px;
-}
-
-.action-secondary button {
-  flex: 1;
-  min-height: 40px;
-}
-
 .selection-toolbar {
   position: absolute;
   z-index: 7;
@@ -485,18 +463,29 @@ button.danger {
 }
 
 .selection-toolbar button {
-  min-width: 44px;
+  width: var(--tap);
+  min-width: var(--tap);
   min-height: var(--tap);
-  padding: 0 7px;
+  padding: 0;
   background: transparent;
   color: var(--cream);
   border-radius: 11px;
   display: grid;
   place-items: center;
-  font-size: 0.62rem;
-  font-weight: 650;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
+}
+
+.selection-toolbar button svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.selection-toolbar .toolbar-sep {
+  flex: 0 0 1px;
+  width: 1px;
+  align-self: stretch;
+  margin: 8px 1px;
+  background: color-mix(in srgb, var(--cream) 28%, transparent);
 }
 
 .selection-toolbar button:active {

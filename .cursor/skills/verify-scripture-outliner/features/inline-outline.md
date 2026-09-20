@@ -25,7 +25,7 @@ Preconditions:
 - **Section header.** Select `data-word-id` 0 then 24, choose **Section**. No `section-header` yet. Then **Summary** `The LORD is shepherd`. Run `page.locator('[data-word-id="0"]').click()`, `page.locator('[data-word-id="24"]').click()`, `page.getByTestId("action-section").click()`, fill and save summary. One `section-header[data-depth="0"]` is visible in `passage`, bold, above the body words.
 - **Subsection.** Tap word 9 (shrinks the selected section to that word), tap word 24, choose **Deeper**, **Summary** `Green pastures`. A `section-header[data-depth="1"]` sits on its own line with greater left padding than depth 0.
 - **Subsubsection.** Tap word 18, tap word 24, choose **Deeper**, **Summary** `Still waters`. A `section-header[data-depth="2"]` is present. Depths include `"0"`, `"1"`, and `"2"`.
-- **Clear chrome.** Choose **Clear** so pins and the toolbar do not cover headers.
+- **Clear chrome.** Tap the pane margin so pins and the toolbar do not cover headers. Run `page.getByTestId("pane-text").click({ position: { x: 10, y: 10 } })`.
 - **Proof.** `drive.mjs inline-outline` writes `evidence/inline-outline/nested.png` at 390×844 showing the three headers in the passage. Also capture `before.png` after sample load.
 
 ## Gotchas
