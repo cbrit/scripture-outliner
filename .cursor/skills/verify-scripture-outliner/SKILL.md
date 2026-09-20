@@ -60,7 +60,7 @@ Stable handles (prefer `data-testid`):
 | `import-view` | Empty-state import section |
 | `import-text` | Paste textarea |
 | `import-submit` | Import button |
-| `load-sample` | Load sample (Psalm 23 KJV) |
+| `load-sample` | Load sample |
 | `title-input` | Document title |
 | `editor` | Editor; `data-view` is `text` \| `split` \| `outline` |
 | `passage` | Word stream |
@@ -73,7 +73,7 @@ Stable handles (prefer `data-testid`):
 | `summary-dialog` `summary-field` `summary-save` `summary-cancel` | Summary modal |
 | `export` `new-document` | Header actions |
 
-Do not click words by CSS `.word` index in new recipes if a `data-word-id` is known. Sample load currently makes word id `0` the verse token `1` and id `1` `The`.
+Do not click words by CSS `.word` index in new recipes if a `data-word-id` is known. After **Load sample**, word id `0` is `The`.
 
 Feature recipes live in [`features/`](features/README.md). Drive the mapped entry points, not a shortcut.
 

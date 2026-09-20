@@ -7,11 +7,9 @@ export type TokenizeResult = {
   breakBefore: BreakKind[];
 };
 
-const VERSE_RE = /^(?:\d+:\d+|\d+)$/;
-
 /**
- * Split passage text on whitespace. Punctuation stays attached to words.
- * Line-leading `1` / `1:1` tokens are marked as verse labels.
+ * Split text on whitespace. Punctuation stays attached to words.
+ * Tokens are plain words; numbers and labels are not special.
  */
 export function tokenize(rawText: string): TokenizeResult {
   const words: Word[] = [];
@@ -55,13 +53,7 @@ export function tokenize(rawText: string): TokenizeResult {
       j += 1;
     }
     const token = text.slice(i, j);
-    const atLineStart =
-      words.length === 0 || pending === "newline" || pending === "par" || pending === "none";
-    const word: Word = { id: words.length, text: token };
-    if (atLineStart && VERSE_RE.test(token)) {
-      word.verseLabel = token;
-    }
-    words.push(word);
+    words.push({ id: words.length, text: token });
     breakBefore.push(
       words.length === 1 ? "none" : pending === "none" ? "space" : pending,
     );

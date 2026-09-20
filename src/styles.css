@@ -291,15 +291,6 @@ button.danger {
   cursor: pointer;
 }
 
-.word.verse {
-  font-family: var(--font-ui);
-  font-size: 0.72em;
-  font-weight: 700;
-  color: var(--forest);
-  vertical-align: super;
-  padding-right: 0.2em;
-}
-
 .word.seg-0 {
   background: var(--seg0);
 }

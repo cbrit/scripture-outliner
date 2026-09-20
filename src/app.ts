@@ -156,7 +156,7 @@ export function mount(root: HTMLElement): void {
     for (const word of doc.passage.words) {
       appendBreak(refs.passage, breaks[word.id] ?? "space");
       const span = document.createElement("span");
-      span.className = word.verseLabel ? "word verse" : "word";
+      span.className = "word";
       span.dataset.wordId = String(word.id);
       span.setAttribute("data-testid", "word");
       span.textContent = word.text;
@@ -540,7 +540,7 @@ export function mount(root: HTMLElement): void {
 
   refs.importView.querySelector("[data-import-submit]")?.addEventListener(
     "click",
-    () => importTextAs("Untitled passage", refs.importText.value),
+    () => importTextAs("Untitled", refs.importText.value),
   );
   refs.importView.querySelector("[data-load-sample]")?.addEventListener(
     "click",
@@ -707,7 +707,7 @@ function shellHtml(): string {
       <header class="header">
         <div class="brand">
           <h1 data-testid="app-title">Scripture Outliner</h1>
-          <input class="title-input" type="text" placeholder="Untitled passage" hidden data-testid="title-input" />
+          <input class="title-input" type="text" placeholder="Untitled" hidden data-testid="title-input" />
         </div>
         <div class="header-actions" hidden>
           <button type="button" class="secondary" data-export data-testid="export">Export</button>
@@ -717,12 +717,12 @@ function shellHtml(): string {
       </header>
       <main class="main">
         <section class="empty" data-import data-testid="import-view">
-          <h2>Import a passage</h2>
-          <p>Paste scripture (or any text). Select by tapping words — nothing is auto-outlined.</p>
-          <textarea data-import-text data-testid="import-text" placeholder="Paste passage text…"></textarea>
+          <h2>Import text</h2>
+          <p>Paste any text. Select by tapping words — nothing is auto-outlined.</p>
+          <textarea data-import-text data-testid="import-text" placeholder="Paste text…"></textarea>
           <div class="empty-actions">
             <button type="button" data-import-submit data-testid="import-submit">Import</button>
-            <button type="button" class="secondary" data-load-sample data-testid="load-sample">Load sample (Psalm 23 KJV)</button>
+            <button type="button" class="secondary" data-load-sample data-testid="load-sample">Load sample</button>
           </div>
         </section>
         <section class="editor" hidden data-editor data-testid="editor" data-view="split">

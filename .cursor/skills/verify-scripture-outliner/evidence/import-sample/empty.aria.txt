@@ -4,9 +4,9 @@ h1: Scripture Outliner
 extra: {"step":"empty-import"}
 ---
 SCRIPTURE OUTLINER
-Import a passage
+Import text
 
-Paste scripture (or any text). Select by tapping words — nothing is auto-outlined.
+Paste any text. Select by tapping words — nothing is auto-outlined.
 
 Import
-Load sample (Psalm 23 KJV)
+Load sample

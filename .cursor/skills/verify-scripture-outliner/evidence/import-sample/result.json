@@ -6,8 +6,8 @@
     "height": 844
   },
   "result": {
-    "wordCount": 124,
-    "title": "Psalm 23 (KJV)",
+    "wordCount": 118,
+    "title": "Sample",
     "before": {
       "png": "evidence/import-sample/empty.png",
       "aria": "evidence/import-sample/empty.aria.txt"
@@ -17,5 +17,5 @@
       "aria": "evidence/import-sample/sample-loaded.aria.txt"
     }
   },
-  "at": "2026-09-20T19:14:40.942Z"
+  "at": "2026-09-20T19:16:32.679Z"
 }
