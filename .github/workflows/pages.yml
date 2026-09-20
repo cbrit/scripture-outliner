@@ -1,0 +1,42 @@
+name: Deploy GitHub Pages
+
+# Manual only. GITHUB_TOKEN cannot create a Pages site on this private repo
+# (configure-pages enablement returns 403). Enable Pages in repo Settings first,
+# then run this workflow. Do not target cbrit.github.io root or Whatley sites.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: python3 scripts/generate-icons.py
+      - run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - run: npm run build
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+      - run: touch dist/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
