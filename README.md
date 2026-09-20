@@ -1,6 +1,6 @@
 # Scripture Outliner
 
-Mobile-first PWA for outlining text by hand. You import text, select **words** (not characters), mark sections and subsections, and write your own summary statements. Nothing is auto-outlined or auto-summarized.
+Mobile-first PWA for outlining text by hand. You import text, select **words** (not characters), and mark sections in the passage itself. Summaries show as bold headers above their body. Nothing is auto-outlined or auto-summarized.
 
 One document at a time. It lives in `localStorage` on this device.
 
@@ -56,9 +56,9 @@ Install and the service worker require a secure context: `localhost` or HTTPS.
 
 1. Paste text, or tap **Load sample**.
 2. Tap a word to select it. Tap a second word to extend the range. Drag the two pins; they snap to word edges only.
-3. **Bullet** marks a depth-0 section. **Sub** marks a depth-1 subsection. **Summary** opens an editor for that range (empty until you type).
-4. Switch **Text** / **Split** / **Outline**. In Split, tap an outline row to reselect that range in the text.
-5. Reload: the current document is restored from `localStorage`. **Export** downloads Markdown (and copies it when the clipboard is available).
+3. **Section** marks a depth-0 heading for the range. **Deeper** / **Shallower** change nesting. **Summary** edits the bold header (empty still shows a placeholder snippet).
+4. Headers sit in the passage above their body. Nested ranges start on a new line and indent by depth.
+5. Reload: the current document is restored from `localStorage`. **Export** downloads Markdown with ATX headers by depth (and copies it when the clipboard is available).
 
 ## Manual QA (~390px viewport)
 
@@ -68,18 +68,17 @@ Use device mode at **390×844** (or an actual phone). After `npm run dev`:
 2. Tap **The**. Selection is that word only; start and end pins sit on its edges.
 3. Tap **want.** The range is word-aligned (`The` … `want.`), not a character highlight.
 4. Drag the end pin onto **shepherd;** — it snaps to that word, never mid-token.
-5. **Bullet**, then select a later phrase and **Sub**. Highlights use two shades; the outline lists an indented sub-bullet.
-6. **Summary**, type a sentence, Save. The outline shows your text, not a generated paraphrase.
-7. Switch to **Split**: text on top, outline under it, both scrollable. Tap the outline row — the text reselects that range.
-8. **Text** hides the outline; **Outline** hides the text. **Bullet / Sub / Summary** sit on the selection as a compact toolbar (44px targets). Clear / Delete stay on the sticky bar.
-9. Reload the tab. Title, segments, summaries, and view mode return.
-10. **Export** produces a `.md` file with indented bullets.
+5. **Section**, then select an inner phrase and **Deeper**. A bold header appears above the section; the subsection starts on its own indented line.
+6. **Deeper** again on a still-inner range (depth 2). **Summary**, type a sentence, Save. The header shows your text; an empty header keeps a bold snippet placeholder.
+7. Highlights use stacked shades; selection fill stays one continuous bar. There is no Text / Outline / Split toggle.
+8. Reload the tab. Title, nested segments, and summaries return.
+9. **Export** produces a `.md` file with `#` title and `##` / `###` / `####` outline headings.
 
 Secondary: **Clear** drops the selection; **Delete** removes the segment that exactly matches the selection; **New** returns to import.
 
 ## Domain
 
-The app follows the locked design in the task’s `DESIGN.md`: flat `Segment[]` (`depth` 0 or 1), `Selection` as inclusive word ids, one `Document`. Overlapping new ranges clip or split older ones (newest wins). Nested outline trees were not used.
+The app uses a flat `Segment[]` with numeric `depth` (0 = section, 1 = subsection, …). `Selection` is inclusive word ids. One `Document`. Nested ranges must sit strictly inside a shallower parent or be non-overlapping siblings; insert clips partial overlaps and splits same-depth containers. Old documents with depth `0 | 1` still load.
 
 ## Stack
 

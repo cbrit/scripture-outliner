@@ -1,10 +1,4 @@
-import {
-  assertNever,
-  type Document,
-  type PinEdge,
-  type ViewMode,
-  type WordId,
-} from "./types";
+import { assertNever, type Document, type PinEdge, type WordId } from "./types";
 import {
   breaksForPassage,
   passageFromText,
@@ -12,17 +6,21 @@ import {
 } from "./tokenize";
 import { SAMPLE_TEXT, SAMPLE_TITLE } from "./sample";
 import {
+  MAX_DEPTH,
+  canDeepen,
   createDocument,
   createSegment,
   exactSegment,
+  headerLabel,
   highlightDepthForWord,
+  innermostCoveringSegment,
   insertSegment,
-  newestCoveringSegment,
   orderedSelection,
+  passageParts,
   removeSegment,
   selectionEquals,
-  snippet,
-  suggestedSummaryDepth,
+  setSegmentDepth,
+  suggestedDepth,
   updateSegment,
 } from "./segments";
 import { clearDocument, loadDocument, saveDocument } from "./store";
@@ -30,18 +28,14 @@ import { exportOutlineMarkdown, outlineFilename } from "./exportMarkdown";
 
 type Refs = {
   titleInput: HTMLInputElement;
-  viewToggle: HTMLElement;
   headerActions: HTMLElement;
   importView: HTMLElement;
   importText: HTMLTextAreaElement;
   editor: HTMLElement;
   paneText: HTMLElement;
-  paneOutline: HTMLElement;
   passage: HTMLElement;
   pinStart: HTMLButtonElement;
   pinEnd: HTMLButtonElement;
-  outlineList: HTMLElement;
-  outlineEmpty: HTMLElement;
   actionBar: HTMLElement;
   hint: HTMLElement;
   selectionToolbar: HTMLElement;
@@ -49,7 +43,8 @@ type Refs = {
   summaryField: HTMLTextAreaElement;
 };
 
-const VIEW_MODES: readonly ViewMode[] = ["text", "split", "outline"];
+const SEG_CLASSES = ["seg-0", "seg-1", "seg-2", "seg-3"] as const;
+const HIGHLIGHT_CLASSES = ["selected", ...SEG_CLASSES] as const;
 
 export function mount(root: HTMLElement): void {
   root.innerHTML = shellHtml();
@@ -57,6 +52,7 @@ export function mount(root: HTMLElement): void {
   let doc = loadDocument();
   let extendFrom: WordId | null = null;
   let dragging: PinEdge | null = null;
+  let builtKey = "";
 
   function persist(): void {
     if (doc) {
@@ -81,29 +77,24 @@ export function mount(root: HTMLElement): void {
     if (!doc) {
       refs.importView.hidden = false;
       refs.editor.hidden = true;
-      refs.viewToggle.hidden = true;
       refs.headerActions.hidden = true;
       refs.titleInput.value = "";
       refs.titleInput.disabled = true;
       refs.titleInput.hidden = true;
       refs.actionBar.hidden = true;
       refs.hint.hidden = true;
+      refs.selectionToolbar.hidden = true;
+      refs.pinStart.hidden = true;
+      refs.pinEnd.hidden = true;
       return;
     }
     refs.importView.hidden = true;
     refs.editor.hidden = false;
-    refs.viewToggle.hidden = false;
     refs.headerActions.hidden = false;
     refs.titleInput.disabled = false;
     refs.titleInput.hidden = false;
     refs.titleInput.value = doc.passage.title;
-    refs.editor.dataset.view = doc.viewMode;
-    for (const button of refs.viewToggle.querySelectorAll("button")) {
-      const mode = button.dataset.view;
-      button.setAttribute("aria-pressed", String(mode === doc.viewMode));
-    }
     renderPassage();
-    renderOutline();
     renderActions();
     positionPins();
     positionToolbar();
@@ -129,40 +120,58 @@ export function mount(root: HTMLElement): void {
     });
   }
 
+  function structureKey(current: Document): string {
+    return `${current.passage.id}:${current.segments
+      .map(
+        (segment) =>
+          `${segment.id}:${segment.start}:${segment.end}:${segment.depth}:${segment.summary}`,
+      )
+      .join("|")}`;
+  }
+
+  function highlightKind(
+    current: Document,
+    id: WordId,
+  ): (typeof HIGHLIGHT_CLASSES)[number] | null {
+    const selection = current.selection;
+    if (selection !== null && id >= selection.start && id <= selection.end) {
+      return "selected";
+    }
+    const depth = highlightDepthForWord(current.segments, id);
+    if (depth === null) {
+      return null;
+    }
+    return SEG_CLASSES[Math.min(depth, SEG_CLASSES.length - 1)] ?? "seg-3";
+  }
+
+  function applyHighlightClasses(
+    el: HTMLElement,
+    kind: (typeof HIGHLIGHT_CLASSES)[number] | null,
+  ): void {
+    for (const cls of HIGHLIGHT_CLASSES) {
+      el.classList.toggle(cls, kind === cls);
+    }
+  }
+
   function renderPassage(): void {
     if (!doc) {
       return;
     }
-    const existingCount = refs.passage.querySelectorAll(".word").length;
-    if (existingCount !== doc.passage.words.length) {
+    const key = structureKey(doc);
+    if (key !== builtKey) {
       buildPassage();
+      builtKey = key;
     }
     const current = doc;
-    const selection = current.selection;
     const words = refs.passage.querySelectorAll<HTMLSpanElement>(".word");
     const breaks = breaksForPassage(current.passage);
-    const kindAt = (id: WordId): "selected" | "seg-0" | "seg-1" | null => {
-      if (selection !== null && id >= selection.start && id <= selection.end) {
-        return "selected";
-      }
-      const depth = highlightDepthForWord(current.segments, id);
-      if (depth === 0) {
-        return "seg-0";
-      }
-      if (depth === 1) {
-        return "seg-1";
-      }
-      return null;
-    };
     const wordCount = current.passage.words.length;
     for (const el of words) {
       const id = Number(el.dataset.wordId);
-      const kind = kindAt(id);
-      el.classList.toggle("selected", kind === "selected");
-      el.classList.toggle("seg-0", kind === "seg-0");
-      el.classList.toggle("seg-1", kind === "seg-1");
-      const prevKind = id > 0 ? kindAt(id - 1) : null;
-      const nextKind = id + 1 < wordCount ? kindAt(id + 1) : null;
+      const kind = highlightKind(current, id);
+      applyHighlightClasses(el, kind);
+      const prevKind = id > 0 ? highlightKind(current, id - 1) : null;
+      const nextKind = id + 1 < wordCount ? highlightKind(current, id + 1) : null;
       const breakHere = breaks[id] ?? "space";
       const nextBreak =
         id + 1 < wordCount ? (breaks[id + 1] ?? "space") : "none";
@@ -181,15 +190,23 @@ export function mount(root: HTMLElement): void {
     for (const gap of refs.passage.querySelectorAll<HTMLSpanElement>(".gap")) {
       const beforeId = Number(gap.dataset.before);
       if (!Number.isInteger(beforeId) || beforeId <= 0) {
-        gap.classList.remove("selected", "seg-0", "seg-1");
+        applyHighlightClasses(gap, null);
         continue;
       }
-      const left = kindAt(beforeId - 1);
-      const right = kindAt(beforeId);
+      const left = highlightKind(current, beforeId - 1);
+      const right = highlightKind(current, beforeId);
       const fill = left !== null && left === right;
-      gap.classList.toggle("selected", fill && left === "selected");
-      gap.classList.toggle("seg-0", fill && left === "seg-0");
-      gap.classList.toggle("seg-1", fill && left === "seg-1");
+      applyHighlightClasses(gap, fill ? left : null);
+    }
+    for (const header of refs.passage.querySelectorAll<HTMLElement>(
+      "[data-testid='section-header']",
+    )) {
+      const segmentId = header.dataset.segmentId;
+      const segment = current.segments.find((entry) => entry.id === segmentId);
+      const currentRange =
+        segment !== undefined &&
+        selectionEquals(current.selection, segment.start, segment.end);
+      header.toggleAttribute("aria-current", currentRange);
     }
   }
 
@@ -198,111 +215,32 @@ export function mount(root: HTMLElement): void {
       return;
     }
     refs.passage.replaceChildren();
-    const breaks = breaksForPassage(doc.passage);
-    for (const word of doc.passage.words) {
-      appendBreak(refs.passage, breaks[word.id] ?? "space", word.id);
-      const span = document.createElement("span");
-      span.className = "word";
-      span.dataset.wordId = String(word.id);
-      span.setAttribute("data-testid", "word");
-      span.textContent = word.text;
-      refs.passage.append(span);
-    }
-  }
-
-  function renderOutline(): void {
-    if (!doc) {
-      return;
-    }
-    refs.outlineList.replaceChildren();
-    refs.outlineEmpty.hidden = doc.segments.length > 0;
-    for (const segment of doc.segments) {
-      refs.outlineList.append(outlineRow(segment));
-    }
-  }
-
-  function outlineRow(segment: NonNullable<Document["segments"][number]>): HTMLLIElement {
-    const row = document.createElement("li");
-    row.className = "outline-row";
-    row.dataset.segmentId = segment.id;
-    row.dataset.depth = String(segment.depth);
-    row.setAttribute("data-testid", "outline-row");
-    if (
-      doc &&
-      doc.selection &&
-      selectionEquals(doc.selection, segment.start, segment.end)
-    ) {
-      row.setAttribute("aria-current", "true");
-    }
-
-    const mark = document.createElement("button");
-    mark.type = "button";
-    mark.className = "outline-mark";
-    mark.textContent = segment.depth === 0 ? "•" : "◦";
-    mark.title = "Select this range";
-
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "summary-input";
-    input.value = segment.summary;
-    input.placeholder = snippet(
-      doc?.passage.words ?? [],
-      segment.start,
-      segment.end,
-    );
-
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "ghost";
-    remove.textContent = "✕";
-    remove.title = "Delete segment";
-
-    const selectRange = (): void => {
-      if (!doc) {
-        return;
+    const current = doc;
+    const breaks = breaksForPassage(current.passage);
+    const parts = passageParts(current.passage.words.length, current.segments);
+    for (const part of parts) {
+      switch (part.kind) {
+        case "header": {
+          refs.passage.append(sectionHeader(current, part.segment));
+          break;
+        }
+        case "words": {
+          appendWordRange(
+            refs.passage,
+            current,
+            breaks,
+            part.start,
+            part.end,
+            part.depth,
+          );
+          break;
+        }
+        default: {
+          const _exhaustive: never = part;
+          assertNever(_exhaustive);
+        }
       }
-      extendFrom = null;
-      const nextView: ViewMode = doc.viewMode === "outline" ? "split" : doc.viewMode;
-      patchDoc({
-        ...doc,
-        selection: { start: segment.start, end: segment.end },
-        viewMode: nextView,
-      });
-      render({ reveal: true });
-    };
-
-    mark.addEventListener("click", selectRange);
-    row.addEventListener("click", (event) => {
-      if (event.target === input || event.target === remove) {
-        return;
-      }
-      selectRange();
-    });
-    input.addEventListener("input", () => {
-      if (!doc) {
-        return;
-      }
-      patchDoc({
-        ...doc,
-        segments: updateSegment(doc.segments, segment.id, {
-          summary: input.value,
-        }),
-      });
-    });
-    remove.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (!doc) {
-        return;
-      }
-      patchDoc({
-        ...doc,
-        segments: removeSegment(doc.segments, segment.id),
-      });
-      render({ reveal: true });
-    });
-
-    row.append(mark, input, remove);
-    return row;
+    }
   }
 
   function renderActions(): void {
@@ -319,6 +257,14 @@ export function mount(root: HTMLElement): void {
     const del = refs.actionBar.querySelector("[data-delete]");
     if (del instanceof HTMLButtonElement) {
       del.disabled = !matched;
+    }
+    const shallower = refs.selectionToolbar.querySelector("[data-shallower]");
+    if (shallower instanceof HTMLButtonElement) {
+      shallower.disabled = !matched || matched.depth <= 0;
+    }
+    const deeper = refs.selectionToolbar.querySelector("[data-deeper]");
+    if (deeper instanceof HTMLButtonElement) {
+      deeper.disabled = matched !== undefined && !canDeepen(doc.segments, matched);
     }
   }
 
@@ -370,7 +316,7 @@ export function mount(root: HTMLElement): void {
     const rangeBottom = Math.max(startBox.bottom, endBox.bottom);
     const rangeLeft = Math.min(startBox.left, endBox.left);
     const toolbar = refs.selectionToolbar;
-    const toolbarW = Math.max(toolbar.offsetWidth, 148);
+    const toolbarW = Math.max(toolbar.offsetWidth, 220);
     const toolbarH = Math.max(toolbar.offsetHeight, 50);
     const pad = 6;
     let top = rangeBottom - origin.top + 8;
@@ -416,6 +362,22 @@ export function mount(root: HTMLElement): void {
     return best;
   }
 
+  function selectSegmentById(id: string): void {
+    if (!doc) {
+      return;
+    }
+    const segment = doc.segments.find((entry) => entry.id === id);
+    if (!segment) {
+      return;
+    }
+    extendFrom = null;
+    patchDoc({
+      ...doc,
+      selection: { start: segment.start, end: segment.end },
+    });
+    render({ reveal: true });
+  }
+
   function onWordTap(wordId: WordId): void {
     if (!doc || dragging) {
       return;
@@ -436,7 +398,7 @@ export function mount(root: HTMLElement): void {
       selection.start !== selection.end &&
       (wordId < selection.start || wordId > selection.end)
     ) {
-      const coveringOutside = newestCoveringSegment(doc.segments, wordId);
+      const coveringOutside = innermostCoveringSegment(doc.segments, wordId);
       if (coveringOutside) {
         extendFrom = null;
         patchDoc({
@@ -451,7 +413,7 @@ export function mount(root: HTMLElement): void {
       render({ reveal: true });
       return;
     }
-    const covering = newestCoveringSegment(doc.segments, wordId);
+    const covering = innermostCoveringSegment(doc.segments, wordId);
     if (
       covering &&
       !selectionEquals(doc.selection, covering.start, covering.end)
@@ -514,27 +476,21 @@ export function mount(root: HTMLElement): void {
       return;
     }
     extendFrom = null;
+    builtKey = "";
     setDoc(createDocument(passage));
   }
 
-  function setView(mode: ViewMode): void {
-    if (!doc) {
-      return;
-    }
-    patchDoc({ ...doc, viewMode: mode });
-    render({ reveal: true });
-  }
-
-  function addBullet(depth: 0 | 1): void {
+  function applySegmentDepth(depth: number): void {
     if (!doc || !doc.selection) {
       return;
     }
+    const clamped = Math.max(0, Math.min(MAX_DEPTH, depth));
     extendFrom = null;
     const existing = exactSegment(doc.segments, doc.selection);
     if (existing) {
       patchDoc({
         ...doc,
-        segments: updateSegment(doc.segments, existing.id, { depth }),
+        segments: setSegmentDepth(doc.segments, existing.id, clamped),
       });
       render({ reveal: true });
       return;
@@ -543,10 +499,40 @@ export function mount(root: HTMLElement): void {
       ...doc,
       segments: insertSegment(
         doc.segments,
-        createSegment(doc.selection, depth),
+        createSegment(doc.selection, clamped),
       ),
     });
     render();
+  }
+
+  function markSection(): void {
+    applySegmentDepth(0);
+  }
+
+  function markDeeper(): void {
+    if (!doc || !doc.selection) {
+      return;
+    }
+    const existing = exactSegment(doc.segments, doc.selection);
+    if (existing) {
+      if (!canDeepen(doc.segments, existing)) {
+        return;
+      }
+      applySegmentDepth(existing.depth + 1);
+      return;
+    }
+    applySegmentDepth(suggestedDepth(doc.segments, doc.selection));
+  }
+
+  function markShallower(): void {
+    if (!doc || !doc.selection) {
+      return;
+    }
+    const existing = exactSegment(doc.segments, doc.selection);
+    if (!existing || existing.depth <= 0) {
+      return;
+    }
+    applySegmentDepth(existing.depth - 1);
   }
 
   function openSummary(): void {
@@ -571,7 +557,7 @@ export function mount(root: HTMLElement): void {
         segments: updateSegment(doc.segments, existing.id, { summary: text }),
       });
     } else {
-      const depth = suggestedSummaryDepth(doc.segments, doc.selection);
+      const depth = suggestedDepth(doc.segments, doc.selection);
       patchDoc({
         ...doc,
         segments: insertSegment(
@@ -628,6 +614,7 @@ export function mount(root: HTMLElement): void {
       return;
     }
     extendFrom = null;
+    builtKey = "";
     refs.importText.value = "";
     setDoc(null);
   }
@@ -652,21 +639,19 @@ export function mount(root: HTMLElement): void {
       passage: { ...doc.passage, title: refs.titleInput.value },
     });
   });
-  refs.viewToggle.addEventListener("click", (event) => {
-    const button = event.target;
-    if (!(button instanceof HTMLButtonElement)) {
-      return;
-    }
-    const mode = button.dataset.view;
-    if (mode === "text" || mode === "outline" || mode === "split") {
-      setView(mode);
-    }
-  });
   root.querySelector("[data-export]")?.addEventListener("click", exportOutline);
   root.querySelector("[data-new]")?.addEventListener("click", newDocument);
 
   refs.passage.addEventListener("pointerdown", (event) => {
     if (dragging) {
+      return;
+    }
+    const header = headerFromEvent(event);
+    if (header) {
+      refs.passage.dataset.tapHeader = header;
+      refs.passage.dataset.tapX = String(event.clientX);
+      refs.passage.dataset.tapY = String(event.clientY);
+      delete refs.passage.dataset.tapId;
       return;
     }
     const word = wordIdFromEvent(event);
@@ -676,18 +661,28 @@ export function mount(root: HTMLElement): void {
     refs.passage.dataset.tapX = String(event.clientX);
     refs.passage.dataset.tapY = String(event.clientY);
     refs.passage.dataset.tapId = String(word);
+    delete refs.passage.dataset.tapHeader;
   });
   refs.passage.addEventListener("pointerup", (event) => {
-    const rawId = refs.passage.dataset.tapId;
     const tapX = Number(refs.passage.dataset.tapX);
     const tapY = Number(refs.passage.dataset.tapY);
+    const headerId = refs.passage.dataset.tapHeader;
+    const rawId = refs.passage.dataset.tapId;
     delete refs.passage.dataset.tapId;
     delete refs.passage.dataset.tapX;
     delete refs.passage.dataset.tapY;
-    if (rawId === undefined || Number.isNaN(tapX) || Number.isNaN(tapY)) {
+    delete refs.passage.dataset.tapHeader;
+    if (Number.isNaN(tapX) || Number.isNaN(tapY)) {
       return;
     }
     if (Math.hypot(event.clientX - tapX, event.clientY - tapY) > 14) {
+      return;
+    }
+    if (headerId) {
+      selectSegmentById(headerId);
+      return;
+    }
+    if (rawId === undefined) {
       return;
     }
     onWordTap(Number(rawId));
@@ -720,11 +715,17 @@ export function mount(root: HTMLElement): void {
     });
   }
 
-  refs.selectionToolbar.querySelector("[data-bullet]")?.addEventListener("click", () =>
-    addBullet(0),
+  refs.selectionToolbar.querySelector("[data-section]")?.addEventListener(
+    "click",
+    markSection,
   );
-  refs.selectionToolbar.querySelector("[data-sub]")?.addEventListener("click", () =>
-    addBullet(1),
+  refs.selectionToolbar.querySelector("[data-deeper]")?.addEventListener(
+    "click",
+    markDeeper,
+  );
+  refs.selectionToolbar.querySelector("[data-shallower]")?.addEventListener(
+    "click",
+    markShallower,
   );
   refs.selectionToolbar.querySelector("[data-summary]")?.addEventListener(
     "click",
@@ -778,18 +779,14 @@ export function mount(root: HTMLElement): void {
 function bind(root: HTMLElement): Refs {
   return {
     titleInput: requireEl(root, ".title-input", HTMLInputElement),
-    viewToggle: requireEl(root, "[data-view-toggle]", HTMLElement),
     headerActions: requireEl(root, ".header-actions", HTMLElement),
     importView: requireEl(root, "[data-import]", HTMLElement),
     importText: requireEl(root, "[data-import-text]", HTMLTextAreaElement),
     editor: requireEl(root, "[data-editor]", HTMLElement),
     paneText: requireEl(root, "[data-pane-text]", HTMLElement),
-    paneOutline: requireEl(root, "[data-pane-outline]", HTMLElement),
     passage: requireEl(root, "[data-passage]", HTMLElement),
     pinStart: requireEl(root, "[data-pin-start]", HTMLButtonElement),
     pinEnd: requireEl(root, "[data-pin-end]", HTMLButtonElement),
-    outlineList: requireEl(root, "[data-outline-list]", HTMLElement),
-    outlineEmpty: requireEl(root, "[data-outline-empty]", HTMLElement),
     actionBar: requireEl(root, "[data-action-bar]", HTMLElement),
     hint: requireEl(root, "[data-hint]", HTMLElement),
     selectionToolbar: requireEl(root, "[data-selection-toolbar]", HTMLElement),
@@ -799,10 +796,6 @@ function bind(root: HTMLElement): Refs {
 }
 
 function shellHtml(): string {
-  const viewButtons = VIEW_MODES.map((mode) => {
-    const label = viewModeLabel(mode);
-    return `<button type="button" data-view="${mode}" data-testid="view-${mode}">${label}</button>`;
-  }).join("");
   return `
     <div class="shell">
       <header class="header">
@@ -814,7 +807,6 @@ function shellHtml(): string {
           <button type="button" class="secondary" data-export data-testid="export">Export</button>
           <button type="button" class="ghost" data-new data-testid="new-document">New</button>
         </div>
-        <div class="view-toggle" data-view-toggle data-testid="view-toggle" hidden>${viewButtons}</div>
       </header>
       <main class="main">
         <section class="empty" data-import data-testid="import-view">
@@ -826,54 +818,25 @@ function shellHtml(): string {
             <button type="button" class="secondary" data-load-sample data-testid="load-sample">Load sample</button>
           </div>
         </section>
-        <section class="editor" hidden data-editor data-testid="editor" data-view="split">
-          <div class="panes">
-            <div class="pane pane-text" data-pane-text data-testid="pane-text">
-              <div class="passage-wrap">
-                <div class="passage" data-passage data-testid="passage"></div>
-                <button type="button" class="pin pin-start" data-pin-start data-testid="pin-start" hidden aria-label="Selection start"></button>
-                <button type="button" class="pin pin-end" data-pin-end data-testid="pin-end" hidden aria-label="Selection end"></button>
-                <div
-                  class="selection-toolbar"
-                  data-selection-toolbar
-                  data-testid="selection-toolbar"
-                  hidden
-                >
-                  <button type="button" data-bullet data-testid="action-bullet" aria-label="Bullet" title="Bullet">
-                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                      <circle cx="6" cy="7" r="2.2" fill="currentColor" />
-                      <rect x="11" y="5.9" width="10" height="2.2" rx="1" fill="currentColor" />
-                      <circle cx="6" cy="12" r="2.2" fill="currentColor" />
-                      <rect x="11" y="10.9" width="10" height="2.2" rx="1" fill="currentColor" />
-                      <circle cx="6" cy="17" r="2.2" fill="currentColor" />
-                      <rect x="11" y="15.9" width="10" height="2.2" rx="1" fill="currentColor" />
-                    </svg>
-                  </button>
-                  <button type="button" data-sub data-testid="action-sub" aria-label="Sub" title="Sub">
-                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                      <circle cx="10" cy="7" r="2.2" fill="currentColor" />
-                      <rect x="15" y="5.9" width="6" height="2.2" rx="1" fill="currentColor" />
-                      <circle cx="10" cy="12" r="2.2" fill="currentColor" />
-                      <rect x="15" y="10.9" width="6" height="2.2" rx="1" fill="currentColor" />
-                      <circle cx="10" cy="17" r="2.2" fill="currentColor" />
-                      <rect x="15" y="15.9" width="6" height="2.2" rx="1" fill="currentColor" />
-                    </svg>
-                  </button>
-                  <button type="button" data-summary data-testid="action-summary" aria-label="Summary" title="Summary">
-                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                      <rect x="4" y="5" width="16" height="2.2" rx="1" fill="currentColor" />
-                      <rect x="4" y="11" width="12" height="2.2" rx="1" fill="currentColor" />
-                      <rect x="4" y="17" width="8" height="2.2" rx="1" fill="currentColor" />
-                    </svg>
-                  </button>
-                </div>
+        <section class="editor" hidden data-editor data-testid="editor">
+          <div class="pane pane-text" data-pane-text data-testid="pane-text">
+            <div class="passage-wrap">
+              <div class="passage" data-passage data-testid="passage"></div>
+              <button type="button" class="pin pin-start" data-pin-start data-testid="pin-start" hidden aria-label="Selection start"></button>
+              <button type="button" class="pin pin-end" data-pin-end data-testid="pin-end" hidden aria-label="Selection end"></button>
+              <div
+                class="selection-toolbar"
+                data-selection-toolbar
+                data-testid="selection-toolbar"
+                hidden
+              >
+                <button type="button" data-section data-testid="action-section" aria-label="Section" title="Section">Section</button>
+                <button type="button" data-deeper data-testid="action-deeper" aria-label="Deeper" title="Deeper">Deeper</button>
+                <button type="button" data-shallower data-testid="action-shallower" aria-label="Shallower" title="Shallower">Shallower</button>
+                <button type="button" data-summary data-testid="action-summary" aria-label="Summary" title="Summary">Summary</button>
               </div>
-              <p class="hint" data-hint data-testid="selection-hint">Tap a word to select. Tap a second word to extend. Drag the pins to snap.</p>
             </div>
-            <div class="pane pane-outline" data-pane-outline data-testid="pane-outline">
-              <ul class="outline-list" data-outline-list data-testid="outline-list"></ul>
-              <p class="outline-empty" data-outline-empty data-testid="outline-empty">No segments yet. Select words, then Bullet or Sub.</p>
-            </div>
+            <p class="hint" data-hint data-testid="selection-hint">Tap a word to select. Tap a second word to extend. Drag the pins to snap.</p>
           </div>
           <div class="action-bar" data-action-bar data-testid="action-bar" hidden>
             <div class="action-secondary">
@@ -886,7 +849,7 @@ function shellHtml(): string {
       <dialog class="summary-dialog" data-summary-dialog data-testid="summary-dialog">
         <form method="dialog">
           <h2>Summary</h2>
-          <textarea data-summary-field data-testid="summary-field" placeholder="Write a summary for this range…"></textarea>
+          <textarea data-summary-field data-testid="summary-field" placeholder="Write a heading for this range…"></textarea>
           <div class="dialog-actions">
             <button type="button" class="secondary" data-summary-cancel data-testid="summary-cancel">Cancel</button>
             <button type="submit" data-summary-save data-testid="summary-save">Save</button>
@@ -897,19 +860,64 @@ function shellHtml(): string {
   `;
 }
 
-function viewModeLabel(mode: ViewMode): string {
-  switch (mode) {
-    case "text":
-      return "Text";
-    case "outline":
-      return "Outline";
-    case "split":
-      return "Split";
-    default: {
-      const _exhaustive: never = mode;
-      return _exhaustive;
-    }
+function sectionHeader(
+  doc: Document,
+  segment: Document["segments"][number],
+): HTMLElement {
+  const level = Math.min(6, Math.max(2, segment.depth + 2));
+  const el = document.createElement(`h${level}`);
+  el.className = "section-header";
+  el.dataset.depth = String(segment.depth);
+  el.dataset.segmentId = segment.id;
+  el.setAttribute("data-testid", "section-header");
+  const label = headerLabel(doc.passage.words, segment);
+  el.textContent = label.text;
+  if (label.placeholder) {
+    el.dataset.placeholder = "true";
   }
+  return el;
+}
+
+function appendWordRange(
+  target: HTMLElement,
+  doc: Document,
+  breaks: BreakKind[],
+  start: WordId,
+  end: WordId,
+  depth: number,
+): void {
+  if (end < start) {
+    return;
+  }
+  const run = document.createElement("span");
+  run.className = "word-run";
+  run.dataset.depth = String(depth);
+  let first = true;
+  for (let id = start; id <= end; id += 1) {
+    const word = doc.passage.words[id];
+    if (!word) {
+      continue;
+    }
+    const kind = breaks[id] ?? "space";
+    if (first) {
+      first = false;
+      if (kind !== "none" && kind !== "space") {
+        appendBreak(run, kind, id);
+      }
+    } else {
+      appendBreak(run, kind, id);
+    }
+    const span = document.createElement("span");
+    span.className = "word";
+    span.dataset.wordId = String(word.id);
+    span.setAttribute("data-testid", "word");
+    span.textContent = word.text;
+    run.append(span);
+  }
+  if (run.childElementCount === 0) {
+    return;
+  }
+  target.append(run);
 }
 
 function appendBreak(
@@ -953,6 +961,18 @@ function wordIdFromEvent(event: Event): WordId | null {
     return null;
   }
   return Number(word.dataset.wordId);
+}
+
+function headerFromEvent(event: Event): string | null {
+  const target = event.target;
+  if (!(target instanceof Element)) {
+    return null;
+  }
+  const header = target.closest("[data-testid='section-header']");
+  if (!(header instanceof HTMLElement) || header.dataset.segmentId === undefined) {
+    return null;
+  }
+  return header.dataset.segmentId;
 }
 
 function requireEl<T extends HTMLElement>(

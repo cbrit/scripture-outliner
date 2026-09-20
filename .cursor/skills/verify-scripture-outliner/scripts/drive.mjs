@@ -3,7 +3,7 @@
  * Drive Scripture Outliner in Chrome via Playwright against the launched preview.
  *
  * Usage: node drive.mjs <feature-id>
- * Features: import-sample | word-selection | bullet-sub-summary | view-modes | persistence
+ * Features: import-sample | word-selection | section-deeper-summary | inline-outline | persistence
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -102,6 +102,23 @@ async function snapshot(page, dir, name, extra) {
   };
 }
 
+async function clickWordId(page, id) {
+  await page.locator(`[data-word-id="${id}"]`).click();
+}
+
+async function saveSummary(page, text) {
+  await page.getByTestId("action-summary").click();
+  await page.getByTestId("summary-field").fill(text);
+  await page.getByTestId("summary-save").click();
+  await page.getByTestId("summary-dialog").waitFor({ state: "hidden" });
+}
+
+async function headerDepths(page) {
+  return page.getByTestId("section-header").evaluateAll((headers) =>
+    headers.map((header) => header.getAttribute("data-depth")),
+  );
+}
+
 async function driveImportSample(page) {
   const importView = page.getByTestId("import-view");
   if (!(await importView.isVisible())) {
@@ -147,6 +164,11 @@ async function driveWordSelection(page) {
   if (!(await toolbar.isVisible())) {
     throw new Error("Selection toolbar should be visible after a word tap");
   }
+  for (const action of ["action-section", "action-deeper", "action-shallower", "action-summary"]) {
+    if (!(await page.getByTestId(action).isVisible())) {
+      throw new Error(`Missing toolbar action ${action}`);
+    }
+  }
   const startHidden = await page.getByTestId("pin-start").getAttribute("hidden");
   if (startHidden !== null) {
     throw new Error("Start pin should be visible after a word tap");
@@ -167,96 +189,134 @@ async function driveWordSelection(page) {
   return { selected: rangeCount, filledGaps, after };
 }
 
-async function driveBulletSubSummary(page) {
+async function driveSectionDeeperSummary(page) {
   await driveImportSample(page);
   await page.getByTestId("word").nth(1).click();
   await page.getByTestId("word").nth(6).click();
-  await page.getByTestId("action-bullet").click();
-  await page.getByTestId("outline-row").first().waitFor();
-  const bulletRows = await page.getByTestId("outline-row").count();
-  if (bulletRows < 1) {
-    throw new Error("Bullet did not create an outline row");
+  await page.getByTestId("action-section").click();
+  await page.getByTestId("section-header").first().waitFor();
+  const sectionCount = await page.getByTestId("section-header").count();
+  if (sectionCount < 1) {
+    throw new Error("Section did not create an inline header");
   }
-  await page.getByTestId("word").nth(20).click();
-  await page.getByTestId("word").nth(24).click();
-  await page.getByTestId("action-sub").click();
-  const depths = await page.getByTestId("outline-row").evaluateAll((rows) =>
-    rows.map((row) => row.getAttribute("data-depth")),
-  );
+  const placeholder = await page
+    .locator('[data-testid="section-header"][data-placeholder="true"]')
+    .count();
+  if (placeholder < 1) {
+    throw new Error("Empty section should show a placeholder header");
+  }
+  await page.getByTestId("word").nth(3).click();
+  await page.getByTestId("word").nth(5).click();
+  await page.getByTestId("action-deeper").click();
+  const depths = await headerDepths(page);
   if (!depths.includes("0") || !depths.includes("1")) {
-    throw new Error(`Expected depth 0 and 1 rows, got ${JSON.stringify(depths)}`);
+    throw new Error(`Expected depth 0 and 1 headers, got ${JSON.stringify(depths)}`);
   }
-  await page.getByTestId("action-summary").click();
-  await page.getByTestId("summary-field").fill("Shepherd care");
-  await page.getByTestId("summary-save").click();
-  const summaries = await page.locator(".summary-input").evaluateAll((inputs) =>
-    inputs.map((input) => (input instanceof HTMLInputElement ? input.value : "")),
+  await saveSummary(page, "Shepherd care");
+  const summaries = await page.getByTestId("section-header").evaluateAll((headers) =>
+    headers.map((header) => header.textContent ?? ""),
   );
   if (!summaries.some((value) => value.includes("Shepherd care"))) {
-    throw new Error(`Summary did not persist in outline, got ${JSON.stringify(summaries)}`);
+    throw new Error(`Summary did not persist in header, got ${JSON.stringify(summaries)}`);
   }
-  const after = await snapshot(page, path.join(evidenceRoot, "bullet-sub-summary"), "outline", {
+  const after = await snapshot(page, path.join(evidenceRoot, "section-deeper-summary"), "outline", {
     depths,
     summaries,
   });
   return { depths, summaries, after };
 }
 
-async function driveViewModes(page) {
+async function driveInlineOutline(page) {
   await driveImportSample(page);
-  const editor = page.getByTestId("editor");
-  await page.getByTestId("view-text").click();
-  if ((await editor.getAttribute("data-view")) !== "text") {
-    throw new Error("Text view did not apply");
-  }
-  const textShot = await snapshot(page, path.join(evidenceRoot, "view-modes"), "text", {
-    view: "text",
+  const before = await snapshot(page, path.join(evidenceRoot, "inline-outline"), "before", {
+    step: "sample-loaded",
   });
-  await page.getByTestId("view-outline").click();
-  if ((await editor.getAttribute("data-view")) !== "outline") {
-    throw new Error("Outline view did not apply");
+  await clickWordId(page, 0);
+  await clickWordId(page, 24);
+  await page.getByTestId("action-section").click();
+  await page.locator('[data-testid="section-header"][data-depth="0"]').waitFor();
+  await saveSummary(page, "The LORD is shepherd");
+  await clickWordId(page, 9);
+  await clickWordId(page, 24);
+  await page.getByTestId("action-deeper").click();
+  await page.locator('[data-testid="section-header"][data-depth="1"]').waitFor();
+  await saveSummary(page, "Green pastures");
+  await clickWordId(page, 18);
+  await clickWordId(page, 24);
+  await page.getByTestId("action-deeper").click();
+  await page.locator('[data-testid="section-header"][data-depth="2"]').waitFor();
+  await saveSummary(page, "Still waters");
+  await page.getByTestId("action-clear").click();
+  const depths = await headerDepths(page);
+  if (!depths.includes("0") || !depths.includes("1") || !depths.includes("2")) {
+    throw new Error(`Expected nested depths 0–2, got ${JSON.stringify(depths)}`);
   }
-  const outlineShot = await snapshot(page, path.join(evidenceRoot, "view-modes"), "outline", {
-    view: "outline",
-  });
-  await page.getByTestId("view-split").click();
-  if ((await editor.getAttribute("data-view")) !== "split") {
-    throw new Error("Split view did not apply");
+  const texts = await page.getByTestId("section-header").evaluateAll((headers) =>
+    headers.map((header) => ({
+      depth: header.getAttribute("data-depth"),
+      text: header.textContent ?? "",
+      placeholder: header.getAttribute("data-placeholder"),
+      paddingLeft: Number.parseFloat(getComputedStyle(header).paddingLeft),
+    })),
+  );
+  const d0 = texts.find((entry) => entry.depth === "0");
+  const d1 = texts.find((entry) => entry.depth === "1");
+  const d2 = texts.find((entry) => entry.depth === "2");
+  if (!d0 || !d1 || !d2) {
+    throw new Error(`Missing nested headers: ${JSON.stringify(texts)}`);
   }
-  const splitShot = await snapshot(page, path.join(evidenceRoot, "view-modes"), "split", {
-    view: "split",
+  if (d1.paddingLeft <= d0.paddingLeft || d2.paddingLeft <= d1.paddingLeft) {
+    throw new Error(`Headers are not indented by depth: ${JSON.stringify(texts)}`);
+  }
+  if (
+    !d0.text.includes("The LORD is shepherd") ||
+    !d1.text.includes("Green pastures") ||
+    !d2.text.includes("Still waters")
+  ) {
+    throw new Error(`Unexpected header labels: ${JSON.stringify(texts)}`);
+  }
+  const after = await snapshot(page, path.join(evidenceRoot, "inline-outline"), "nested", {
+    depths,
+    texts,
   });
-  return { textShot, outlineShot, splitShot };
+  return { depths, texts, before, after };
 }
 
 async function drivePersistence(page) {
   await driveImportSample(page);
   await page.getByTestId("word").nth(1).click();
-  await page.getByTestId("action-bullet").click();
-  await page.getByTestId("outline-row").first().waitFor();
+  await page.getByTestId("action-section").click();
+  await page.getByTestId("section-header").first().waitFor();
   const stored = await page.evaluate(() => localStorage.getItem("scripture-outliner.document.v1"));
   if (!stored) {
-    throw new Error("localStorage key scripture-outliner.document.v1 was empty after Bullet");
+    throw new Error("localStorage key scripture-outliner.document.v1 was empty after Section");
+  }
+  const parsed = JSON.parse(stored);
+  if (!Array.isArray(parsed.segments) || parsed.segments.length < 1) {
+    throw new Error("Stored document had no segments");
+  }
+  if (typeof parsed.segments[0].depth !== "number") {
+    throw new Error("Stored segment depth was not a number");
   }
   await page.reload({ waitUntil: "networkidle" });
   await page.getByTestId("passage").waitFor({ state: "visible" });
   const title = await page.getByTestId("title-input").inputValue();
-  const rows = await page.getByTestId("outline-row").count();
-  if (!title.includes("Sample") || rows < 1) {
-    throw new Error(`Reload lost document (title=${title} rows=${rows})`);
+  const headers = await page.getByTestId("section-header").count();
+  if (!title.includes("Sample") || headers < 1) {
+    throw new Error(`Reload lost document (title=${title} headers=${headers})`);
   }
   const after = await snapshot(page, path.join(evidenceRoot, "persistence"), "reload", {
     title,
-    rows,
+    headers,
   });
-  return { title, rows, after };
+  return { title, headers, after };
 }
 
 const drivers = {
   "import-sample": driveImportSample,
   "word-selection": driveWordSelection,
-  "bullet-sub-summary": driveBulletSubSummary,
-  "view-modes": driveViewModes,
+  "section-deeper-summary": driveSectionDeeperSummary,
+  "inline-outline": driveInlineOutline,
   persistence: drivePersistence,
 };
 

@@ -21,7 +21,7 @@ This directory is the maintained source for verifying user-facing behavior. Read
 
 - Capture the user action and the resulting state, not only the final screen.
 - UI proof includes a text snapshot and a 390px screenshot with `Scripture Outliner` visible.
-- Persistence proof includes a reload (or a second load of the same origin) that still shows the title and outline.
+- Persistence proof includes a reload (or a second load of the same origin) that still shows the title and outline headers.
 - Record the feature ID with every artifact under `evidence/<feature-id>/`.
 - Report an unreachable path with the command and the unmet precondition.
 - Do not report a skipped entry point as verified through a different path.
@@ -39,6 +39,6 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 
 - [Import and sample](./import-sample.md) covers paste import and the built-in sample.
 - [Word selection and pins](./word-selection.md) covers tap, extend, and pin visibility.
-- [Bullet, sub, and summary](./bullet-sub-summary.md) covers marking ranges and writing a summary.
-- [View modes](./view-modes.md) covers Text, Split, and Outline.
+- [Section, deeper, and summary](./section-deeper-summary.md) covers marking ranges and writing a heading.
+- [Inline outline](./inline-outline.md) covers bold headers in the passage, nested indent, and depth ≥ 2.
 - [Persistence](./persistence.md) covers `localStorage` restore after reload.

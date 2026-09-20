@@ -18,21 +18,22 @@ export type Selection = {
   end: WordId;
 } | null;
 
+/**
+ * Inclusive word range in the passage.
+ * `depth` is 0 for a section, 1 for a subsection, 2 for a subsubsection, and so on.
+ */
 export type Segment = {
   id: string;
   start: WordId;
   end: WordId;
-  depth: 0 | 1;
+  depth: number;
   summary: string;
 };
-
-export type ViewMode = "text" | "outline" | "split";
 
 export type Document = {
   passage: Passage;
   segments: Segment[];
   selection: Selection;
-  viewMode: ViewMode;
 };
 
 export type PinEdge = "start" | "end";
