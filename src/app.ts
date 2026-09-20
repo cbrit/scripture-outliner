@@ -68,7 +68,7 @@ export function mount(root: HTMLElement): void {
   function setDoc(next: Document | null): void {
     doc = next;
     persist();
-    render();
+    render({ reveal: true });
   }
 
   function patchDoc(next: Document): void {
@@ -76,7 +76,7 @@ export function mount(root: HTMLElement): void {
     persist();
   }
 
-  function render(): void {
+  function render(opts?: { reveal?: boolean }): void {
     if (!doc) {
       refs.importView.hidden = false;
       refs.editor.hidden = true;
@@ -84,6 +84,7 @@ export function mount(root: HTMLElement): void {
       refs.headerActions.hidden = true;
       refs.titleInput.value = "";
       refs.titleInput.disabled = true;
+      refs.titleInput.hidden = true;
       refs.actionBar.hidden = true;
       refs.hint.hidden = true;
       return;
@@ -93,6 +94,7 @@ export function mount(root: HTMLElement): void {
     refs.viewToggle.hidden = false;
     refs.headerActions.hidden = false;
     refs.titleInput.disabled = false;
+    refs.titleInput.hidden = false;
     refs.titleInput.value = doc.passage.title;
     refs.editor.dataset.view = doc.viewMode;
     for (const button of refs.viewToggle.querySelectorAll("button")) {
@@ -103,6 +105,25 @@ export function mount(root: HTMLElement): void {
     renderOutline();
     renderActions();
     positionPins();
+    if (opts?.reveal) {
+      revealSelection();
+    }
+    requestAnimationFrame(() => {
+      positionPins();
+      if (opts?.reveal) {
+        revealSelection();
+      }
+    });
+  }
+
+  function revealSelection(): void {
+    if (!doc?.selection) {
+      return;
+    }
+    wordElement(doc.selection.start)?.scrollIntoView({
+      block: "nearest",
+      inline: "nearest",
+    });
   }
 
   function renderPassage(): void {
@@ -199,7 +220,7 @@ export function mount(root: HTMLElement): void {
         selection: { start: segment.start, end: segment.end },
         viewMode: nextView,
       });
-      render();
+      render({ reveal: true });
     };
 
     mark.addEventListener("click", selectRange);
@@ -229,7 +250,7 @@ export function mount(root: HTMLElement): void {
         ...doc,
         segments: removeSegment(doc.segments, segment.id),
       });
-      render();
+      render({ reveal: true });
     });
 
     row.append(mark, input, remove);
@@ -273,10 +294,10 @@ export function mount(root: HTMLElement): void {
     const endBox = endEl.getBoundingClientRect();
     refs.pinStart.hidden = false;
     refs.pinEnd.hidden = false;
-    refs.pinStart.style.left = `${startBox.left - origin.left}px`;
+    refs.pinStart.style.left = `${(startBox.left + startBox.right) / 2 - origin.left}px`;
     refs.pinStart.style.top = `${startBox.top - origin.top}px`;
     refs.pinEnd.style.left = `${endBox.right - origin.left}px`;
-    refs.pinEnd.style.top = `${endBox.bottom - origin.top}px`;
+    refs.pinEnd.style.top = `${(endBox.top + endBox.bottom) / 2 - origin.top}px`;
   }
 
   function wordElement(id: WordId): HTMLSpanElement | null {
@@ -311,7 +332,28 @@ export function mount(root: HTMLElement): void {
         ...doc,
         selection: orderedSelection(anchor, wordId),
       });
-      render();
+      render({ reveal: true });
+      return;
+    }
+    const selection = doc.selection;
+    if (
+      selection &&
+      selection.start !== selection.end &&
+      (wordId < selection.start || wordId > selection.end)
+    ) {
+      const coveringOutside = newestCoveringSegment(doc.segments, wordId);
+      if (coveringOutside) {
+        extendFrom = null;
+        patchDoc({
+          ...doc,
+          selection: { start: coveringOutside.start, end: coveringOutside.end },
+        });
+        render({ reveal: true });
+        return;
+      }
+      extendFrom = wordId;
+      patchDoc({ ...doc, selection: { start: wordId, end: wordId } });
+      render({ reveal: true });
       return;
     }
     const covering = newestCoveringSegment(doc.segments, wordId);
@@ -324,7 +366,7 @@ export function mount(root: HTMLElement): void {
         ...doc,
         selection: { start: covering.start, end: covering.end },
       });
-      render();
+      render({ reveal: true });
       return;
     }
     if (
@@ -333,12 +375,12 @@ export function mount(root: HTMLElement): void {
     ) {
       extendFrom = wordId;
       patchDoc({ ...doc, selection: { start: wordId, end: wordId } });
-      render();
+      render({ reveal: true });
       return;
     }
     extendFrom = wordId;
     patchDoc({ ...doc, selection: { start: wordId, end: wordId } });
-    render();
+    render({ reveal: true });
   }
 
   function applyPin(edge: PinEdge, wordId: WordId): void {
@@ -384,21 +426,21 @@ export function mount(root: HTMLElement): void {
       return;
     }
     patchDoc({ ...doc, viewMode: mode });
-    render();
-    requestAnimationFrame(positionPins);
+    render({ reveal: true });
   }
 
   function addBullet(depth: 0 | 1): void {
     if (!doc || !doc.selection) {
       return;
     }
+    extendFrom = null;
     const existing = exactSegment(doc.segments, doc.selection);
     if (existing) {
       patchDoc({
         ...doc,
         segments: updateSegment(doc.segments, existing.id, { depth }),
       });
-      render();
+      render({ reveal: true });
       return;
     }
     patchDoc({
@@ -628,7 +670,7 @@ export function mount(root: HTMLElement): void {
     { passive: false },
   );
 
-  render();
+  render({ reveal: true });
 }
 
 function bind(root: HTMLElement): Refs {
@@ -663,13 +705,13 @@ function shellHtml(): string {
       <header class="header">
         <div class="brand">
           <h1>Scripture Outliner</h1>
-          <input class="title-input" type="text" placeholder="Untitled passage" />
+          <input class="title-input" type="text" placeholder="Untitled passage" hidden />
         </div>
-        <div class="view-toggle" data-view-toggle hidden>${viewButtons}</div>
-        <div class="header-actions">
+        <div class="header-actions" hidden>
           <button type="button" class="secondary" data-export>Export</button>
           <button type="button" class="ghost" data-new>New</button>
         </div>
+        <div class="view-toggle" data-view-toggle hidden>${viewButtons}</div>
       </header>
       <main class="main">
         <section class="empty" data-import>

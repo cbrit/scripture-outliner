@@ -139,6 +139,7 @@ button.danger {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
+  justify-self: end;
 }
 
 .header-actions button {
@@ -270,6 +271,7 @@ button.danger {
 
 .passage-wrap {
   position: relative;
+  padding: 22px 20px 8px;
 }
 
 .passage {
@@ -336,22 +338,48 @@ button.danger {
   box-shadow: 0 1px 4px rgba(31, 27, 22, 0.35);
 }
 
+.pin::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 12px;
+  background: var(--forest);
+}
+
 .pin-start {
   transform: translate(-50%, -100%);
 }
 
 .pin-start::before {
-  left: 14px;
-  bottom: 4px;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+}
+
+.pin-start::after {
+  left: 50%;
+  bottom: 0;
+  width: 2px;
+  height: 10px;
+  transform: translateX(-50%);
 }
 
 .pin-end {
-  transform: translate(-50%, 0);
+  transform: translate(0, -50%);
 }
 
 .pin-end::before {
-  left: 14px;
-  top: 4px;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.pin-end::after {
+  left: 0;
+  top: 50%;
+  width: 8px;
+  height: 2px;
+  transform: translateY(-50%);
 }
 
 .action-bar {
