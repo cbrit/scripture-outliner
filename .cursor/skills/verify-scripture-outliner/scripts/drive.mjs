@@ -119,8 +119,12 @@ async function driveImportSample(page) {
   if (wordCount < 50) {
     throw new Error(`Expected sample words, got ${wordCount}`);
   }
-  if (!title.includes("Psalm 23")) {
+  if (title !== "Sample") {
     throw new Error(`Unexpected title after sample: ${title}`);
+  }
+  const firstWord = (await words.first().textContent()) ?? "";
+  if (firstWord !== "The") {
+    throw new Error(`Expected first sample word "The", got ${JSON.stringify(firstWord)}`);
   }
   const after = await snapshot(page, path.join(evidenceRoot, "import-sample"), "sample-loaded", {
     step: "sample-loaded",
@@ -227,7 +231,7 @@ async function drivePersistence(page) {
   await page.getByTestId("passage").waitFor({ state: "visible" });
   const title = await page.getByTestId("title-input").inputValue();
   const rows = await page.getByTestId("outline-row").count();
-  if (!title.includes("Psalm 23") || rows < 1) {
+  if (!title.includes("Sample") || rows < 1) {
     throw new Error(`Reload lost document (title=${title} rows=${rows})`);
   }
   const after = await snapshot(page, path.join(evidenceRoot, "persistence"), "reload", {

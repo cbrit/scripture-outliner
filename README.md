@@ -1,6 +1,6 @@
 # Scripture Outliner
 
-Mobile-first PWA for outlining a scripture passage by hand. You import text, select **words** (not characters), mark sections and subsections, and write your own summary statements. Nothing is auto-outlined or auto-summarized.
+Mobile-first PWA for outlining text by hand. You import text, select **words** (not characters), mark sections and subsections, and write your own summary statements. Nothing is auto-outlined or auto-summarized.
 
 One document at a time. It lives in `localStorage` on this device.
 
@@ -52,10 +52,10 @@ Install and the service worker require a secure context: `localhost` or HTTPS.
 
 ## Core loop
 
-1. Paste a passage, or tap **Load sample (Psalm 23 KJV)** (public domain).
+1. Paste text, or tap **Load sample**.
 2. Tap a word to select it. Tap a second word to extend the range. Drag the two pins; they snap to word edges only.
 3. **Bullet** marks a depth-0 section. **Sub** marks a depth-1 subsection. **Summary** opens an editor for that range (empty until you type).
-4. Switch **Text** / **Split** / **Outline**. In Split, tap an outline row to reselect that range in the passage.
+4. Switch **Text** / **Split** / **Outline**. In Split, tap an outline row to reselect that range in the text.
 5. Reload: the current document is restored from `localStorage`. **Export** downloads Markdown (and copies it when the clipboard is available).
 
 ## Manual QA (~390px viewport)
@@ -68,7 +68,7 @@ Use device mode at **390×844** (or an actual phone). After `npm run dev`:
 4. Drag the end pin onto **shepherd;** — it snaps to that word, never mid-token.
 5. **Bullet**, then select a later phrase and **Sub**. Highlights use two shades; the outline lists an indented sub-bullet.
 6. **Summary**, type a sentence, Save. The outline shows your text, not a generated paraphrase.
-7. Switch to **Split**: passage on top, outline under it, both scrollable. Tap the outline row — the passage reselects that range.
+7. Switch to **Split**: text on top, outline under it, both scrollable. Tap the outline row — the text reselects that range.
 8. **Text** hides the outline; **Outline** hides the passage. Sticky **Bullet / Sub / Summary** stay tappable (44px targets) above the home indicator.
 9. Reload the tab. Title, segments, summaries, and view mode return.
 10. **Export** produces a `.md` file with indented bullets.

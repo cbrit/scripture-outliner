@@ -37,7 +37,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 
 ## Features
 
-- [Import and sample](./import-sample.md) covers paste import and the Psalm 23 sample.
+- [Import and sample](./import-sample.md) covers paste import and the built-in sample.
 - [Word selection and pins](./word-selection.md) covers tap, extend, and pin visibility.
 - [Bullet, sub, and summary](./bullet-sub-summary.md) covers marking ranges and writing a summary.
 - [View modes](./view-modes.md) covers Text, Split, and Outline.

@@ -13,7 +13,7 @@ export default defineConfig({
         name: "Scripture Outliner",
         short_name: "Outliner",
         description:
-          "Hand-outline scripture passages with word-level selection.",
+          "Hand-outline text with word-level selection.",
         theme_color: "#3d4a3a",
         background_color: "#f4efe4",
         display: "standalone",

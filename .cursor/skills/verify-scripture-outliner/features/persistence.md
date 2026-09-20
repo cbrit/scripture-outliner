@@ -19,8 +19,8 @@ Preconditions:
 
 - Preview origin is the launched `127.0.0.1` port (storage is origin-scoped).
 
-- **Save.** Load sample, select a word, choose **Bullet**. Run `drive.mjs persistence` or the same clicks. `page.evaluate(() => localStorage.getItem("scripture-outliner.document.v1"))` is non-null JSON with `passage.title` containing `Psalm 23` and `segments.length >= 1`.
-- **Reload.** `page.reload()`. `title-input` still contains `Psalm 23`. At least one `outline-row` exists. `import-view` is hidden.
+- **Save.** Load sample, select a word, choose **Bullet**. Run `drive.mjs persistence` or the same clicks. `page.evaluate(() => localStorage.getItem("scripture-outliner.document.v1"))` is non-null JSON with `passage.title` equal to `Sample` and `segments.length >= 1`.
+- **Reload.** `page.reload()`. `title-input` is still `Sample`. At least one `outline-row` exists. `import-view` is hidden.
 - **New.** Choose **New** and accept the confirm. Run `page.getByTestId("new-document").click()` with a dialog handler that accepts. `import-view` is visible. Storage key is gone.
 - **Proof.** `drive.mjs persistence` writes `evidence/persistence/reload.png` after reload, with title and outline still present.
 

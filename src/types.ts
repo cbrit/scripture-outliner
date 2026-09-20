@@ -4,8 +4,6 @@ export type WordId = number;
 export type Word = {
   id: WordId;
   text: string;
-  /** Present when the token looks like `1:1` or a leading verse number. */
-  verseLabel?: string;
 };
 
 export type Passage = {

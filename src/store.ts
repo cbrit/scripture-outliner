@@ -25,9 +25,6 @@ function parseWord(value: unknown, index: number): Word | null {
     return null;
   }
   const word: Word = { id: index, text: value.text };
-  if (typeof value.verseLabel === "string") {
-    word.verseLabel = value.verseLabel;
-  }
   return word;
 }
 
