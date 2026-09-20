@@ -32,4 +32,5 @@ Preconditions:
 - Pointer travel over 14px on `pointerup` is ignored as a tap. Do not drag when intending a click.
 - Tapping a word that is already covered by a segment may reselect that whole segment instead of starting a new range. Prove selection on a fresh sample with no segments.
 - Pins are `position: absolute` over the passage wrap. Screenshot immediately after click; a scroll without `positionPins` can desync in slow traces, but the app listens to pane scroll.
+- The selection hint sits above the range and to the right of the start pin so later words stay tappable.
 - Word id `0` on the sample is `The`.

@@ -1,16 +1,26 @@
 title: Scripture Outliner
 url: http://127.0.0.1:4173/
 h1: Scripture Outliner
-extra: {"step":"sample-loaded","wordCount":118,"title":"Sample"}
+extra: {"depths":["0","1"],"summaries":["LORD is my shepherd; I shall","Shepherd care"]}
 ---
 SCRIPTURE OUTLINER
 Export
 New
-The LORD is my shepherd; I shall not want.
+The
+LORD is my shepherd; I shall
+LORD is
+Shepherd care
+my shepherd; I
+shall
+not want.
 He maketh me to lie down in green pastures: he leadeth me beside the still waters.
 He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.
 Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.
 Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.
 Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the LORD for ever.
-
-Tap a word to select. Tap a second word to extend. Drag the pins to snap.
+Section
+Deeper
+Shallower
+Summary
+Clear
+Delete

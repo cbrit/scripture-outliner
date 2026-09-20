@@ -34,3 +34,4 @@ Preconditions:
 - Headers rebuild the passage DOM. Wait for `section-header` after each mark before asserting counts.
 - Placeholder headers use `data-placeholder="true"` and a snippet of the range; after Summary that attribute is gone.
 - There is no outline list and no view toggle. Do not look for `outline-row` or `view-split`.
+- Inner overflow does not expand a `fullPage` screenshot. Set the passage pane `scrollTop` to 0 before capturing nested headers.

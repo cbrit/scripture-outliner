@@ -1,13 +1,19 @@
 title: Scripture Outliner
 url: http://127.0.0.1:4173/
 h1: Scripture Outliner
-extra: {"step":"sample-loaded","wordCount":118,"title":"Sample"}
+extra: {"depths":["0","1","2"],"texts":[{"depth":"0","text":"The LORD is shepherd","placeholder":null,"paddingLeft":0},{"depth":"1","text":"Green pastures","placeholder":null,"paddingLeft":18.768},{"depth":"2","text":"Still waters","placeholder":null,"paddingLeft":36.064}]}
 ---
 SCRIPTURE OUTLINER
 Export
 New
+The LORD is shepherd
 The LORD is my shepherd; I shall not want.
-He maketh me to lie down in green pastures: he leadeth me beside the still waters.
+Green pastures
+
+He maketh me to lie down in green pastures:
+Still waters
+he leadeth me beside the still waters.
+
 He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.
 Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.
 Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.

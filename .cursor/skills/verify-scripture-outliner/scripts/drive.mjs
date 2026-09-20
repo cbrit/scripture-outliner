@@ -253,6 +253,13 @@ async function driveInlineOutline(page) {
   await page.locator('[data-testid="section-header"][data-depth="2"]').waitFor();
   await saveSummary(page, "Still waters");
   await page.getByTestId("action-clear").click();
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    const pane = document.querySelector('[data-testid="pane-text"]');
+    if (pane instanceof HTMLElement) {
+      pane.scrollTop = 0;
+    }
+  });
   const depths = await headerDepths(page);
   if (!depths.includes("0") || !depths.includes("1") || !depths.includes("2")) {
     throw new Error(`Expected nested depths 0–2, got ${JSON.stringify(depths)}`);
