@@ -134,16 +134,59 @@ export function mount(root: HTMLElement): void {
     if (existingCount !== doc.passage.words.length) {
       buildPassage();
     }
-    const selection = doc.selection;
+    const current = doc;
+    const selection = current.selection;
     const words = refs.passage.querySelectorAll<HTMLSpanElement>(".word");
+    const breaks = breaksForPassage(current.passage);
+    const kindAt = (id: WordId): "selected" | "seg-0" | "seg-1" | null => {
+      if (selection !== null && id >= selection.start && id <= selection.end) {
+        return "selected";
+      }
+      const depth = highlightDepthForWord(current.segments, id);
+      if (depth === 0) {
+        return "seg-0";
+      }
+      if (depth === 1) {
+        return "seg-1";
+      }
+      return null;
+    };
+    const wordCount = current.passage.words.length;
     for (const el of words) {
       const id = Number(el.dataset.wordId);
-      const selected =
-        selection !== null && id >= selection.start && id <= selection.end;
-      const depth = highlightDepthForWord(doc.segments, id);
-      el.classList.toggle("selected", selected);
-      el.classList.toggle("seg-0", depth === 0 && !selected);
-      el.classList.toggle("seg-1", depth === 1 && !selected);
+      const kind = kindAt(id);
+      el.classList.toggle("selected", kind === "selected");
+      el.classList.toggle("seg-0", kind === "seg-0");
+      el.classList.toggle("seg-1", kind === "seg-1");
+      const prevKind = id > 0 ? kindAt(id - 1) : null;
+      const nextKind = id + 1 < wordCount ? kindAt(id + 1) : null;
+      const breakHere = breaks[id] ?? "space";
+      const nextBreak =
+        id + 1 < wordCount ? (breaks[id + 1] ?? "space") : "none";
+      const runStart =
+        kind !== null &&
+        (prevKind !== kind ||
+          breakHere === "newline" ||
+          breakHere === "par" ||
+          breakHere === "none");
+      const runEnd =
+        kind !== null &&
+        (nextKind !== kind || nextBreak === "newline" || nextBreak === "par");
+      el.classList.toggle("hl-start", runStart);
+      el.classList.toggle("hl-end", runEnd);
+    }
+    for (const gap of refs.passage.querySelectorAll<HTMLSpanElement>(".gap")) {
+      const beforeId = Number(gap.dataset.before);
+      if (!Number.isInteger(beforeId) || beforeId <= 0) {
+        gap.classList.remove("selected", "seg-0", "seg-1");
+        continue;
+      }
+      const left = kindAt(beforeId - 1);
+      const right = kindAt(beforeId);
+      const fill = left !== null && left === right;
+      gap.classList.toggle("selected", fill && left === "selected");
+      gap.classList.toggle("seg-0", fill && left === "seg-0");
+      gap.classList.toggle("seg-1", fill && left === "seg-1");
     }
   }
 
@@ -154,7 +197,7 @@ export function mount(root: HTMLElement): void {
     refs.passage.replaceChildren();
     const breaks = breaksForPassage(doc.passage);
     for (const word of doc.passage.words) {
-      appendBreak(refs.passage, breaks[word.id] ?? "space");
+      appendBreak(refs.passage, breaks[word.id] ?? "space", word.id);
       const span = document.createElement("span");
       span.className = "word";
       span.dataset.wordId = String(word.id);
@@ -780,13 +823,22 @@ function viewModeLabel(mode: ViewMode): string {
   }
 }
 
-function appendBreak(target: HTMLElement, kind: BreakKind): void {
+function appendBreak(
+  target: HTMLElement,
+  kind: BreakKind,
+  beforeWordId: WordId,
+): void {
   switch (kind) {
     case "none":
       return;
-    case "space":
-      target.append(" ");
+    case "space": {
+      const gap = document.createElement("span");
+      gap.className = "gap";
+      gap.dataset.before = String(beforeWordId);
+      gap.textContent = " ";
+      target.append(gap);
       return;
+    }
     case "newline":
       target.append(document.createElement("br"));
       return;
