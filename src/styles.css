@@ -216,7 +216,7 @@ button.danger {
 
 .passage-wrap {
   position: relative;
-  padding: 28px 16px 12px;
+  padding: 72px 16px 12px;
 }
 
 .passage {
@@ -370,7 +370,7 @@ button.danger {
   background: transparent;
   padding: 0;
   touch-action: none;
-  z-index: 6;
+  z-index: 8;
 }
 
 .pin[hidden] {

@@ -103,7 +103,13 @@ async function snapshot(page, dir, name, extra) {
 }
 
 async function clickWordId(page, id) {
-  await page.locator(`[data-word-id="${id}"]`).click();
+  const word = page.locator(`[data-word-id="${id}"]`);
+  await word.scrollIntoViewIfNeeded();
+  const box = await word.boundingBox();
+  if (!box) {
+    throw new Error(`Word ${id} has no bounding box`);
+  }
+  await word.click({ position: { x: Math.min(6, box.width / 2), y: Math.min(6, box.height / 2) } });
 }
 
 async function saveSummary(page, text) {

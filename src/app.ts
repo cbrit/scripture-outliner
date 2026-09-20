@@ -319,14 +319,10 @@ export function mount(root: HTMLElement): void {
     const toolbarW = Math.max(toolbar.offsetWidth, 220);
     const toolbarH = Math.max(toolbar.offsetHeight, 44);
     const pad = 6;
-    let top = rangeBottom - origin.top + 8;
-    let placement = "below";
-    if (top + toolbarH > wrap.clientHeight - pad) {
-      top = rangeTop - origin.top - toolbarH - 8;
-      placement = "above";
-    }
+    let top = rangeTop - origin.top - toolbarH - 8;
+    let placement = "above";
     if (top < pad) {
-      top = pad;
+      top = rangeBottom - origin.top + 8;
       placement = "below";
     }
     let left = rangeLeft - origin.left;
