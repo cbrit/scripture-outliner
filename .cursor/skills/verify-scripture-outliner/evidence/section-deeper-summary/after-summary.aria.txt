@@ -18,4 +18,4 @@ Yea, though I walk through the valley of the shadow of death, I will fear no evi
 Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.
 Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the LORD for ever.
 
-Tap a word to select. Tap a second word to extend. Drag the pins to snap.
+Tap a word to select. Tap a second word to extend. Drag the pins. Tap the margin to deselect.
