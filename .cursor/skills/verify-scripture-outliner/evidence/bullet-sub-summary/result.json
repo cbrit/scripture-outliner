@@ -1,0 +1,23 @@
+{
+  "feature": "bullet-sub-summary",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "depths": [
+      "0",
+      "1"
+    ],
+    "summaries": [
+      "",
+      "Shepherd care"
+    ],
+    "after": {
+      "png": "evidence/bullet-sub-summary/outline.png",
+      "aria": "evidence/bullet-sub-summary/outline.aria.txt"
+    }
+  },
+  "at": "2026-09-20T19:21:29.554Z"
+}

@@ -143,6 +143,10 @@ async function driveWordSelection(page) {
   if (selectedCount !== 1) {
     throw new Error(`Expected 1 selected word, got ${selectedCount}`);
   }
+  const toolbar = page.getByTestId("selection-toolbar");
+  if (!(await toolbar.isVisible())) {
+    throw new Error("Selection toolbar should be visible after a word tap");
+  }
   const startHidden = await page.getByTestId("pin-start").getAttribute("hidden");
   if (startHidden !== null) {
     throw new Error("Start pin should be visible after a word tap");
@@ -173,8 +177,8 @@ async function driveBulletSubSummary(page) {
   if (bulletRows < 1) {
     throw new Error("Bullet did not create an outline row");
   }
-  await page.getByTestId("word").nth(8).click();
-  await page.getByTestId("word").nth(12).click();
+  await page.getByTestId("word").nth(20).click();
+  await page.getByTestId("word").nth(24).click();
   await page.getByTestId("action-sub").click();
   const depths = await page.getByTestId("outline-row").evaluateAll((rows) =>
     rows.map((row) => row.getAttribute("data-depth")),
@@ -185,7 +189,9 @@ async function driveBulletSubSummary(page) {
   await page.getByTestId("action-summary").click();
   await page.getByTestId("summary-field").fill("Shepherd care");
   await page.getByTestId("summary-save").click();
-  const summaries = await page.locator(".summary-input").allInputValues();
+  const summaries = await page.locator(".summary-input").evaluateAll((inputs) =>
+    inputs.map((input) => (input instanceof HTMLInputElement ? input.value : "")),
+  );
   if (!summaries.some((value) => value.includes("Shepherd care"))) {
     throw new Error(`Summary did not persist in outline, got ${JSON.stringify(summaries)}`);
   }

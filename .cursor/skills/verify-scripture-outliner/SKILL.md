@@ -66,7 +66,8 @@ Stable handles (prefer `data-testid`):
 | `passage` | Word stream |
 | `word` | One token; also `data-word-id` |
 | `pin-start` / `pin-end` | Selection pins (`aria-label` Selection start/end) |
-| `action-bar` | Sticky Bullet / Sub / Summary / Clear / Delete |
+| `selection-toolbar` | Hint attached to the current selection (Bullet / Sub / Summary) |
+| `action-bar` | Sticky Clear / Delete |
 | `action-bullet` `action-sub` `action-summary` `action-clear` `action-delete` | Action buttons |
 | `outline-list` / `outline-row` / `outline-empty` | Outline pane |
 | `view-toggle` `view-text` `view-split` `view-outline` | View mode |

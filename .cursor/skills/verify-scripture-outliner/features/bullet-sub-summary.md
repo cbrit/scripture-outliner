@@ -11,8 +11,8 @@ With a selection, the user marks a depth-0 section (**Bullet**), a depth-1 subse
 
 ## How to get to it (user POV)
 
-- Select a word range in the passage.
-- Choose **Bullet**, **Sub**, or **Summary** on the sticky action bar.
+- Select a word range in the text.
+- Choose **Bullet**, **Sub**, or **Summary** on the toolbar attached to the highlight (primary). Clear / Delete stay on the sticky bar.
 - In Split or Outline, tap an outline row to reselect its range.
 - Choose **Delete** when the selection matches a segment exactly.
 
