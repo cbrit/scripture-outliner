@@ -158,6 +158,7 @@ export function mount(root: HTMLElement): void {
       const span = document.createElement("span");
       span.className = word.verseLabel ? "word verse" : "word";
       span.dataset.wordId = String(word.id);
+      span.setAttribute("data-testid", "word");
       span.textContent = word.text;
       refs.passage.append(span);
     }
@@ -179,6 +180,7 @@ export function mount(root: HTMLElement): void {
     row.className = "outline-row";
     row.dataset.segmentId = segment.id;
     row.dataset.depth = String(segment.depth);
+    row.setAttribute("data-testid", "outline-row");
     if (
       doc &&
       doc.selection &&
@@ -698,64 +700,64 @@ function bind(root: HTMLElement): Refs {
 function shellHtml(): string {
   const viewButtons = VIEW_MODES.map((mode) => {
     const label = viewModeLabel(mode);
-    return `<button type="button" data-view="${mode}">${label}</button>`;
+    return `<button type="button" data-view="${mode}" data-testid="view-${mode}">${label}</button>`;
   }).join("");
   return `
     <div class="shell">
       <header class="header">
         <div class="brand">
-          <h1>Scripture Outliner</h1>
-          <input class="title-input" type="text" placeholder="Untitled passage" hidden />
+          <h1 data-testid="app-title">Scripture Outliner</h1>
+          <input class="title-input" type="text" placeholder="Untitled passage" hidden data-testid="title-input" />
         </div>
         <div class="header-actions" hidden>
-          <button type="button" class="secondary" data-export>Export</button>
-          <button type="button" class="ghost" data-new>New</button>
+          <button type="button" class="secondary" data-export data-testid="export">Export</button>
+          <button type="button" class="ghost" data-new data-testid="new-document">New</button>
         </div>
-        <div class="view-toggle" data-view-toggle hidden>${viewButtons}</div>
+        <div class="view-toggle" data-view-toggle data-testid="view-toggle" hidden>${viewButtons}</div>
       </header>
       <main class="main">
-        <section class="empty" data-import>
+        <section class="empty" data-import data-testid="import-view">
           <h2>Import a passage</h2>
           <p>Paste scripture (or any text). Select by tapping words — nothing is auto-outlined.</p>
-          <textarea data-import-text placeholder="Paste passage text…"></textarea>
+          <textarea data-import-text data-testid="import-text" placeholder="Paste passage text…"></textarea>
           <div class="empty-actions">
-            <button type="button" data-import-submit>Import</button>
-            <button type="button" class="secondary" data-load-sample>Load sample (Psalm 23 KJV)</button>
+            <button type="button" data-import-submit data-testid="import-submit">Import</button>
+            <button type="button" class="secondary" data-load-sample data-testid="load-sample">Load sample (Psalm 23 KJV)</button>
           </div>
         </section>
-        <section class="editor" hidden data-editor data-view="split">
+        <section class="editor" hidden data-editor data-testid="editor" data-view="split">
           <div class="panes">
-            <div class="pane pane-text" data-pane-text>
+            <div class="pane pane-text" data-pane-text data-testid="pane-text">
               <div class="passage-wrap">
-                <div class="passage" data-passage></div>
-                <button type="button" class="pin pin-start" data-pin-start hidden aria-label="Selection start"></button>
-                <button type="button" class="pin pin-end" data-pin-end hidden aria-label="Selection end"></button>
+                <div class="passage" data-passage data-testid="passage"></div>
+                <button type="button" class="pin pin-start" data-pin-start data-testid="pin-start" hidden aria-label="Selection start"></button>
+                <button type="button" class="pin pin-end" data-pin-end data-testid="pin-end" hidden aria-label="Selection end"></button>
               </div>
-              <p class="hint" data-hint>Tap a word to select. Tap a second word to extend. Drag the pins to snap.</p>
+              <p class="hint" data-hint data-testid="selection-hint">Tap a word to select. Tap a second word to extend. Drag the pins to snap.</p>
             </div>
-            <div class="pane pane-outline" data-pane-outline>
-              <ul class="outline-list" data-outline-list></ul>
-              <p class="outline-empty" data-outline-empty>No segments yet. Select words, then Bullet or Sub.</p>
+            <div class="pane pane-outline" data-pane-outline data-testid="pane-outline">
+              <ul class="outline-list" data-outline-list data-testid="outline-list"></ul>
+              <p class="outline-empty" data-outline-empty data-testid="outline-empty">No segments yet. Select words, then Bullet or Sub.</p>
             </div>
           </div>
-          <div class="action-bar" data-action-bar hidden>
-            <button type="button" class="primary" data-bullet>Bullet</button>
-            <button type="button" class="primary" data-sub>Sub</button>
-            <button type="button" class="primary" data-summary>Summary</button>
+          <div class="action-bar" data-action-bar data-testid="action-bar" hidden>
+            <button type="button" class="primary" data-bullet data-testid="action-bullet">Bullet</button>
+            <button type="button" class="primary" data-sub data-testid="action-sub">Sub</button>
+            <button type="button" class="primary" data-testid="action-summary" data-summary>Summary</button>
             <div class="action-secondary">
-              <button type="button" class="secondary" data-clear>Clear</button>
-              <button type="button" class="danger" data-delete>Delete</button>
+              <button type="button" class="secondary" data-clear data-testid="action-clear">Clear</button>
+              <button type="button" class="danger" data-delete data-testid="action-delete">Delete</button>
             </div>
           </div>
         </section>
       </main>
-      <dialog class="summary-dialog" data-summary-dialog>
+      <dialog class="summary-dialog" data-summary-dialog data-testid="summary-dialog">
         <form method="dialog">
           <h2>Summary</h2>
-          <textarea data-summary-field placeholder="Write a summary for this range…"></textarea>
+          <textarea data-summary-field data-testid="summary-field" placeholder="Write a summary for this range…"></textarea>
           <div class="dialog-actions">
-            <button type="button" class="secondary" data-summary-cancel>Cancel</button>
-            <button type="submit" data-summary-save>Save</button>
+            <button type="button" class="secondary" data-summary-cancel data-testid="summary-cancel">Cancel</button>
+            <button type="submit" data-summary-save data-testid="summary-save">Save</button>
           </div>
         </form>
       </dialog>

@@ -8,6 +8,12 @@ One document at a time. It lives in `localStorage` on this device.
 
 That URL is the app under the `scripture-outliner/` subdirectory only. It does not replace `https://cbrit.github.io/` and does not use the Whatley Solutions / Whatley Brothers Pages sites. Project Pages on this private repo could not be enabled from the deploy agent (`pages` API 403).
 
+## Verification
+
+Agents prove UI behavior with `.cursor/skills/verify-scripture-outliner/` (Playwright against a local `vite preview` at 390×844). Launch, doctor, drive, and cleanup helpers live in that skill’s `scripts/` directory. Feature recipes are in `features/`.
+
+Seeded proof from the first skill run (import + sample, after cleanup) is in `.cursor/skills/verify-scripture-outliner/evidence/import-sample/`. Cleanup removes the preview process only; it does not delete evidence.
+
 ## Run
 
 ```bash

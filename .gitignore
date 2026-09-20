@@ -4,3 +4,7 @@ dist
 *.local
 dev-dist
 .vite
+.netlify
+.cursor/skills/verify-scripture-outliner/.run/
+.cursor/skills/verify-scripture-outliner/scripts/node_modules/
+.cursor/skills/verify-scripture-outliner/scripts/package-lock.json

@@ -1,0 +1,21 @@
+{
+  "feature": "import-sample",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "wordCount": 124,
+    "title": "Psalm 23 (KJV)",
+    "before": {
+      "png": "evidence/import-sample/empty.png",
+      "aria": "evidence/import-sample/empty.aria.txt"
+    },
+    "after": {
+      "png": "evidence/import-sample/sample-loaded.png",
+      "aria": "evidence/import-sample/sample-loaded.aria.txt"
+    }
+  },
+  "at": "2026-09-20T19:14:40.942Z"
+}
