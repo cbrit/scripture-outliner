@@ -1,11 +1,14 @@
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+const base = process.env.VITE_BASE ?? "/";
+
 export default defineConfig({
+  base,
   plugins: [
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icons/apple-touch-icon.png"],
+      includeAssets: ["icons/apple-touch-icon.png", ".nojekyll"],
       manifest: {
         name: "Scripture Outliner",
         short_name: "Outliner",
@@ -14,8 +17,8 @@ export default defineConfig({
         theme_color: "#3d4a3a",
         background_color: "#f4efe4",
         display: "standalone",
-        start_url: "/",
-        scope: "/",
+        start_url: "./",
+        scope: "./",
         icons: [
           {
             src: "icons/icon-192.png",
@@ -37,6 +40,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
+        navigateFallback: "index.html",
       },
     }),
   ],
