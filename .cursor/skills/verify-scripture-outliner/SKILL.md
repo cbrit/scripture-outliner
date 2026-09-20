@@ -69,9 +69,9 @@ Stable handles (prefer `data-testid`):
 | `word` | One token; also `data-word-id` |
 | `section-header` | Bold inline heading from a non-empty summary; `data-depth` is `0`+. Absent until Summary is written |
 | `pin-start` / `pin-end` | Selection pins (`aria-label` Selection start/end) |
-| `selection-toolbar` | Hint attached to the current selection (Section / Deeper / Shallower / Summary) |
-| `action-bar` | Sticky Clear / Delete |
-| `action-section` `action-deeper` `action-shallower` `action-summary` `action-clear` `action-delete` | Action buttons |
+| `selection-toolbar` | Icon hint attached to the current selection (Section / Deeper / Shallower / Summary / Delete) |
+| `action-section` `action-deeper` `action-shallower` `action-summary` `action-delete` | Icon action buttons (`aria-label` only; no text labels). Delete is the X in this group. |
+| *(removed)* `action-bar` `action-clear` | Sticky bar and Clear are gone. Margin / outside tap deselects. |
 | `summary-dialog` `summary-field` `summary-save` `summary-cancel` | Summary modal |
 | `export` `new-document` | Header actions |
 
@@ -100,7 +100,7 @@ Proof standards:
 
 Seeded proof from the first skill run: `evidence/import-sample/`.
 
-**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone. Inline-outline PRs must show (1) a bold section header in the passage, (2) a nested indented subsection, and (3) depth ≥ 2 when practical.
+**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone. Inline-outline PRs must show (1) a bold section header in the passage, (2) a nested indented subsection, and (3) depth ≥ 2 when practical. Icon-toolbar PRs must show the icon hint including the Delete X.
 
 ## Cleanup
 
@@ -125,4 +125,4 @@ All under `.cursor/skills/verify-scripture-outliner/scripts/`:
 
 `scripts/common.sh` is sourced by the shell helpers. `scripts/package.json` pins `playwright-core`. `scripts/node_modules` is local to the skill and gitignored.
 
-Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`.
+Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`, `icon-toolbar`.

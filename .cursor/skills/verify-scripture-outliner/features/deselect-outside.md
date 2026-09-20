@@ -23,8 +23,8 @@ Preconditions:
 - **Select.** Tap `data-word-id="0"`. Exactly one `.selected` word. `pin-start` and `pin-end` visible. `selection-toolbar` visible.
 - **Before proof.** Capture `evidence/deselect-outside/selected.png` at 390×844 with `Scripture Outliner` visible.
 - **Margin tap.** Click `passage-wrap` at `{ x: 8, y: 10 }` (top-left wrap padding, not a word). Do not click `.word`, `.gap`, `section-header`, pins, or the toolbar.
-- **After proof.** Zero `.selected` words. Pins hidden. `action-bar` hidden. `selection-toolbar` hidden. Capture `evidence/deselect-outside/deselected.png`.
-- **Keep segments.** Select words `0`–`6`, choose **Section**, count `section-header`. Select word `0` again, tap wrap padding. Header count is unchanged. Zero `.selected` words.
+- **After proof.** Zero `.selected` words. Pins hidden. `selection-toolbar` hidden. No `action-bar`. Capture `evidence/deselect-outside/deselected.png`.
+- **Keep segments.** Select words `0`–`6`, choose **Section**, then **Summary** so a header exists. Select word `0` again, tap wrap padding. Header count is unchanged. Zero `.selected` words.
 - **Word tap still works.** Tap a word outside the section (`data-word-id="20"`). One `.selected` word and visible pins. Tapping a word still covered by the segment would reselect that whole range.
 
 ## Gotchas

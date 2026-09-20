@@ -3,7 +3,7 @@
  * Drive Scripture Outliner in Chrome via Playwright against the launched preview.
  *
  * Usage: node drive.mjs <feature-id>
- * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select
+ * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -102,6 +102,60 @@ async function snapshot(page, dir, name, extra) {
   };
 }
 
+const TOOLBAR_ACTIONS = [
+  { id: "action-section", label: "Section" },
+  { id: "action-deeper", label: "Deeper" },
+  { id: "action-shallower", label: "Shallower" },
+  { id: "action-summary", label: "Summary" },
+  { id: "action-delete", label: "Delete" },
+];
+
+async function assertIconToolbar(page) {
+  const toolbar = page.getByTestId("selection-toolbar");
+  if (!(await toolbar.isVisible())) {
+    throw new Error("Selection toolbar should be visible");
+  }
+  for (const action of TOOLBAR_ACTIONS) {
+    const btn = page.getByTestId(action.id);
+    if (!(await btn.isVisible())) {
+      throw new Error(`Missing toolbar action ${action.id}`);
+    }
+    const inToolbar = await btn.evaluate(
+      (el) => el.closest("[data-testid='selection-toolbar']") !== null,
+    );
+    if (!inToolbar) {
+      throw new Error(`${action.id} is not inside selection-toolbar`);
+    }
+    const aria = await btn.getAttribute("aria-label");
+    if (aria !== action.label) {
+      throw new Error(`${action.id} aria-label is ${JSON.stringify(aria)}`);
+    }
+    const text = ((await btn.innerText()) ?? "").trim();
+    if (text) {
+      throw new Error(`${action.id} still shows a text label: ${JSON.stringify(text)}`);
+    }
+    if ((await btn.locator("svg").count()) < 1) {
+      throw new Error(`${action.id} is missing an icon`);
+    }
+    const box = await btn.boundingBox();
+    if (!box || box.width < 44 || box.height < 44) {
+      throw new Error(
+        `${action.id} tap target is ${box?.width}x${box?.height}, expected >= 44`,
+      );
+    }
+  }
+  if ((await page.getByTestId("action-clear").count()) !== 0) {
+    throw new Error("action-clear should be removed");
+  }
+  if ((await page.getByTestId("action-bar").count()) !== 0) {
+    throw new Error("action-bar should be removed");
+  }
+}
+
+async function deselectByMargin(page) {
+  await tapWrapPadding(page);
+}
+
 async function clickWordId(page, id) {
   const word = page.locator(`[data-word-id="${id}"]`);
   await word.scrollIntoViewIfNeeded();
@@ -191,8 +245,8 @@ async function driveDeselectOutside(page) {
   if (await page.getByTestId("selection-toolbar").isVisible()) {
     throw new Error("Selection toolbar should be hidden after margin tap");
   }
-  if (await page.getByTestId("action-bar").isVisible()) {
-    throw new Error("Action bar should be hidden after margin tap");
+  if ((await page.getByTestId("action-bar").count()) !== 0) {
+    throw new Error("action-bar should be removed");
   }
   const after = await snapshot(page, path.join(evidenceRoot, "deselect-outside"), "deselected", {
     step: "deselected-via-margin",
@@ -201,10 +255,15 @@ async function driveDeselectOutside(page) {
   await clickWordId(page, 0);
   await clickWordId(page, 6);
   await page.getByTestId("action-section").click();
+  await waitForExactSegment(page);
+  if ((await page.getByTestId("section-header").count()) !== 0) {
+    throw new Error("Section must not show a header before Summary");
+  }
+  await saveSummary(page, "Shepherd");
   await page.getByTestId("section-header").first().waitFor();
   const headersAfterSection = await page.getByTestId("section-header").count();
   if (headersAfterSection < 1) {
-    throw new Error("Section did not create a header");
+    throw new Error("Summary did not create a header");
   }
   await clickWordId(page, 0);
   await page.getByTestId("pin-start").waitFor({ state: "visible" });
@@ -248,15 +307,7 @@ async function driveWordSelection(page) {
   if (selectedCount !== 1) {
     throw new Error(`Expected 1 selected word, got ${selectedCount}`);
   }
-  const toolbar = page.getByTestId("selection-toolbar");
-  if (!(await toolbar.isVisible())) {
-    throw new Error("Selection toolbar should be visible after a word tap");
-  }
-  for (const action of ["action-section", "action-deeper", "action-shallower", "action-summary"]) {
-    if (!(await page.getByTestId(action).isVisible())) {
-      throw new Error(`Missing toolbar action ${action}`);
-    }
-  }
+  await assertIconToolbar(page);
   const startHidden = await page.getByTestId("pin-start").getAttribute("hidden");
   if (startHidden !== null) {
     throw new Error("Start pin should be visible after a word tap");
@@ -326,7 +377,7 @@ async function driveSectionDeeperSummary(page) {
   if (placeholder !== 0) {
     throw new Error("Summary header must not be a placeholder");
   }
-  await page.getByTestId("action-clear").click();
+  await deselectByMargin(page);
   const afterSummary = await snapshot(
     page,
     path.join(evidenceRoot, "section-deeper-summary"),
@@ -368,7 +419,7 @@ async function driveInlineOutline(page) {
   }
   await saveSummary(page, "Still waters");
   await page.locator('[data-testid="section-header"][data-depth="2"]').waitFor();
-  await page.getByTestId("action-clear").click();
+  await deselectByMargin(page);
   await page.evaluate(() => {
     window.scrollTo(0, 0);
     const pane = document.querySelector('[data-testid="pane-text"]');
@@ -447,10 +498,10 @@ async function driveHeaderSelect(page) {
   if (segment.start !== 0 || segment.end !== 8 || !segment.summary.includes("The LORD is shepherd")) {
     throw new Error(`Unexpected stored segment: ${JSON.stringify(segment)}`);
   }
-  await page.getByTestId("action-clear").click();
+  await deselectByMargin(page);
   const clearedIds = await selectedWordIds(page);
   if (clearedIds.length !== 0) {
-    throw new Error(`Expected no selected words after Clear, got ${JSON.stringify(clearedIds)}`);
+    throw new Error(`Expected no selected words after margin deselect, got ${JSON.stringify(clearedIds)}`);
   }
   const header = page.getByTestId("section-header").first();
   const headerText = (await header.textContent()) ?? "";
@@ -535,12 +586,33 @@ async function drivePersistence(page) {
   if (!title.includes("Sample") || headers < 1 || !headerText.includes("Shepherd care")) {
     throw new Error(`Reload lost document (title=${title} headers=${headers} text=${headerText})`);
   }
-  await page.getByTestId("action-clear").click();
+  await deselectByMargin(page);
   const after = await snapshot(page, path.join(evidenceRoot, "persistence"), "reload", {
     title,
     headers,
   });
   return { title, headers, after };
+}
+
+async function driveIconToolbar(page) {
+  await driveImportSample(page);
+  await clickWordId(page, 0);
+  await page.getByTestId("selection-toolbar").waitFor({ state: "visible" });
+  await assertIconToolbar(page);
+  const deleteDisabled = await page.getByTestId("action-delete").isDisabled();
+  if (!deleteDisabled) {
+    throw new Error("Delete should be disabled when the selection is not an exact segment");
+  }
+  const after = await snapshot(page, path.join(evidenceRoot, "icon-toolbar"), "toolbar", {
+    step: "icon-toolbar",
+    actions: TOOLBAR_ACTIONS.map((action) => action.id),
+  });
+  await deselectByMargin(page);
+  const selectedAfter = await page.locator('[data-testid="word"].selected').count();
+  if (selectedAfter !== 0) {
+    throw new Error(`Margin tap should deselect, still ${selectedAfter} selected`);
+  }
+  return { after, deleteDisabled };
 }
 
 const drivers = {
@@ -551,6 +623,7 @@ const drivers = {
   "inline-outline": driveInlineOutline,
   persistence: drivePersistence,
   "header-select": driveHeaderSelect,
+  "icon-toolbar": driveIconToolbar,
 };
 
 ensurePlaywright();
