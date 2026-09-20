@@ -26,7 +26,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: python3 scripts/generate-icons.py
+      - run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
       - run: npm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
