@@ -97,6 +97,8 @@ Proof standards:
 
 Seeded proof from the first skill run: `evidence/import-sample/`.
 
+**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone.
+
 ## Cleanup
 
 ```bash

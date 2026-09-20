@@ -14,6 +14,8 @@ Agents prove UI behavior with `.cursor/skills/verify-scripture-outliner/` (Playw
 
 Seeded proof from the first skill run (import + sample, after cleanup) is in `.cursor/skills/verify-scripture-outliner/evidence/import-sample/`. Cleanup removes the preview process only; it does not delete evidence.
 
+Every future feature PR must include a screenshot or screen recording as proof of the change.
+
 ## Run
 
 ```bash
