@@ -286,8 +286,9 @@ export function outlineForest(segments: readonly Segment[]): OutlineNode[] {
 }
 
 /**
- * Flatten the passage into headers and word runs. Word-run `depth` is the
- * containing segment's depth, or -1 when the words are not inside a section.
+ * Flatten the passage into headers and word runs. Headers are omitted when
+ * `segment.summary` is empty. Word-run `depth` is the containing segment's
+ * depth, or -1 when the words are not inside a section.
  */
 export function passageParts(
   wordCount: number,
@@ -314,7 +315,9 @@ export function passageParts(
           depth,
         });
       }
-      parts.push({ kind: "header", segment: node.segment });
+      if (segmentHasHeader(node.segment)) {
+        parts.push({ kind: "header", segment: node.segment });
+      }
       walk(node.children, node.segment.start, node.segment.end, node.segment.depth);
       cursor = node.segment.end + 1;
     }
@@ -356,12 +359,17 @@ export function snippet(
   return `${slice.slice(0, maxWords).join(" ")}…`;
 }
 
+/** True when the range should show a bold header (non-empty summary). */
+export function segmentHasHeader(segment: Segment): boolean {
+  return segment.summary.trim().length > 0;
+}
+
 export function headerLabel(
   words: readonly { text: string }[],
   segment: Segment,
 ): { text: string; placeholder: boolean } {
   const text = segment.summary.trim();
-  if (text.length > 0) {
+  if (segmentHasHeader(segment)) {
     return { text, placeholder: false };
   }
   return {

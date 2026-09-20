@@ -5,7 +5,7 @@ The current document (title, words, segments, selection) is saved to `localStora
 ## Sub-features
 
 - `persist-save` writes `scripture-outliner.document.v1` after import and after Section.
-- `persist-reload` restores title, words, and inline headers after a full reload.
+- `persist-reload` restores title, words, segments, and any Summary headers after a full reload.
 - `persist-new` **New** (after confirm) returns to import and clears storage.
 
 ## How to get to it (user POV)
@@ -19,10 +19,10 @@ Preconditions:
 
 - Preview origin is the launched `127.0.0.1` port (storage is origin-scoped).
 
-- **Save.** Load sample, select a word, choose **Section**. Run `drive.mjs persistence` or the same clicks. `page.evaluate(() => localStorage.getItem("scripture-outliner.document.v1"))` is non-null JSON with `passage.title` equal to `Sample` and `segments.length >= 1`. Depth is a number (legacy `0 | 1` still parses).
-- **Reload.** `page.reload()`. `title-input` is still `Sample`. At least one `section-header` exists. `import-view` is hidden.
+- **Save.** Load sample, select a word, choose **Section**. Run `drive.mjs persistence` or the same clicks. `page.evaluate(() => localStorage.getItem("scripture-outliner.document.v1"))` is non-null JSON with `passage.title` equal to `Sample` and `segments.length >= 1`. Depth is a number (legacy `0 | 1` still parses). Zero `section-header` nodes until Summary is saved.
+- **Summary then reload.** Write a Summary, then `page.reload()`. `title-input` is still `Sample`. The saved `section-header` exists. `import-view` is hidden.
 - **New.** Choose **New** and accept the confirm. Run `page.getByTestId("new-document").click()` with a dialog handler that accepts. `import-view` is visible. Storage key is gone.
-- **Proof.** `drive.mjs persistence` writes `evidence/persistence/reload.png` after reload, with title and an inline header still present.
+- **Proof.** `drive.mjs persistence` writes `evidence/persistence/reload.png` after reload, with title and the Summary header still present.
 
 ## Gotchas
 

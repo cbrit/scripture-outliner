@@ -67,7 +67,7 @@ Stable handles (prefer `data-testid`):
 | `passage-wrap` | Passage plus pins/toolbar; top/side padding is not a word |
 | `passage` | Word stream plus inline section headers |
 | `word` | One token; also `data-word-id` |
-| `section-header` | Bold inline heading; `data-depth` is `0`+ and `data-placeholder="true"` when empty |
+| `section-header` | Bold inline heading from a non-empty summary; `data-depth` is `0`+. Absent until Summary is written |
 | `pin-start` / `pin-end` | Selection pins (`aria-label` Selection start/end) |
 | `selection-toolbar` | Hint attached to the current selection (Section / Deeper / Shallower / Summary) |
 | `action-bar` | Sticky Clear / Delete |
@@ -95,7 +95,7 @@ Proof standards:
 
 - Exercise the real click/type path. Reloading after Section is how persistence is proved, not reading the store module.
 - Capture action and resulting state (empty import → sample loaded; tap → `.selected` + visible pins).
-- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; `section-header` nodes after Section/Deeper; dialog text after Summary save.
+- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; no `section-header` after Section/Deeper alone; `section-header` nodes after a non-empty Summary save.
 - No mocks. This app has no backend.
 
 Seeded proof from the first skill run: `evidence/import-sample/`.

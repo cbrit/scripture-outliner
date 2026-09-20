@@ -11,7 +11,6 @@ import {
   createDocument,
   createSegment,
   exactSegment,
-  headerLabel,
   highlightDepthForWord,
   innermostCoveringSegment,
   insertSegment,
@@ -228,7 +227,7 @@ export function mount(root: HTMLElement): void {
     for (const part of parts) {
       switch (part.kind) {
         case "header": {
-          refs.passage.append(sectionHeader(current, part.segment));
+          refs.passage.append(sectionHeader(part.segment));
           break;
         }
         case "words": {
@@ -891,21 +890,14 @@ function shellHtml(): string {
   `;
 }
 
-function sectionHeader(
-  doc: Document,
-  segment: Document["segments"][number],
-): HTMLElement {
+function sectionHeader(segment: Document["segments"][number]): HTMLElement {
   const level = Math.min(6, Math.max(2, segment.depth + 2));
   const el = document.createElement(`h${level}`);
   el.className = "section-header";
   el.dataset.depth = String(segment.depth);
   el.dataset.segmentId = segment.id;
   el.setAttribute("data-testid", "section-header");
-  const label = headerLabel(doc.passage.words, segment);
-  el.textContent = label.text;
-  if (label.placeholder) {
-    el.dataset.placeholder = "true";
-  }
+  el.textContent = segment.summary.trim();
   return el;
 }
 
