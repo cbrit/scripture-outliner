@@ -1,4 +1,8 @@
-import type { Document, Passage, Segment, Selection, ViewMode, Word } from "./types";
+import {
+  MAX_DEPTH,
+  normalizeForest,
+} from "./segments";
+import type { Document, Passage, Segment, Selection, Word } from "./types";
 
 const STORAGE_KEY = "scripture-outliner.document.v1";
 
@@ -6,18 +10,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function parseViewMode(value: unknown): ViewMode | null {
-  if (value === "text" || value === "outline" || value === "split") {
-    return value;
+function parseDepth(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    return null;
   }
-  return null;
-}
-
-function parseDepth(value: unknown): 0 | 1 | null {
-  if (value === 0 || value === 1) {
-    return value;
+  if (value < 0 || value > MAX_DEPTH) {
+    return null;
   }
-  return null;
+  return value;
 }
 
 function parseWord(value: unknown, index: number): Word | null {
@@ -124,12 +124,10 @@ export function parseDocument(raw: unknown): Document | null {
     }
     segments.push(segment);
   }
-  const viewMode = parseViewMode(raw.viewMode) ?? "split";
   return {
     passage,
-    segments,
+    segments: normalizeForest(segments),
     selection: parseSelection(raw.selection, passage.words.length),
-    viewMode,
   };
 }
 

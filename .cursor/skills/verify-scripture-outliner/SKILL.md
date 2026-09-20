@@ -1,11 +1,11 @@
 ---
 name: verify-scripture-outliner
-description: Drive the Scripture Outliner Vite PWA in a real browser (Playwright + Chrome against `vite preview` at 390×844). Use when proving import, word selection, pins, bullets, summaries, view modes, or localStorage persistence.
+description: Drive the Scripture Outliner Vite PWA in a real browser (Playwright + Chrome against `vite preview` at 390×844). Use when proving import, word selection, pins, inline headers, nested outline depth, summaries, or localStorage persistence.
 ---
 
 # Verify Scripture Outliner
 
-Mobile-first vanilla DOM PWA. One document in `localStorage`. Users import text, tap **words** (not characters), and mark Bullet / Sub / Summary by hand. Nothing is auto-outlined.
+Mobile-first vanilla DOM PWA. One document in `localStorage`. Users import text, tap **words** (not characters), and mark Section / Deeper / Shallower / Summary by hand. The passage view **is** the outline: bold headers sit above their body. Nothing is auto-outlined.
 
 This skill is for agents. Drive the real UI. Do not call `mount()`, `setDoc`, or `localStorage.setItem` as a substitute for a user action.
 
@@ -62,21 +62,22 @@ Stable handles (prefer `data-testid`):
 | `import-submit` | Import button |
 | `load-sample` | Load sample |
 | `title-input` | Document title |
-| `editor` | Editor; `data-view` is `text` \| `split` \| `outline` |
-| `passage` | Word stream |
+| `editor` | One-page editor (passage is the outline) |
+| `passage` | Word stream plus inline section headers |
 | `word` | One token; also `data-word-id` |
+| `section-header` | Bold inline heading; `data-depth` is `0`+ and `data-placeholder="true"` when empty |
 | `pin-start` / `pin-end` | Selection pins (`aria-label` Selection start/end) |
-| `selection-toolbar` | Hint attached to the current selection (Bullet / Sub / Summary) |
+| `selection-toolbar` | Hint attached to the current selection (Section / Deeper / Shallower / Summary) |
 | `action-bar` | Sticky Clear / Delete |
-| `action-bullet` `action-sub` `action-summary` `action-clear` `action-delete` | Action buttons |
-| `outline-list` / `outline-row` / `outline-empty` | Outline pane |
-| `view-toggle` `view-text` `view-split` `view-outline` | View mode |
+| `action-section` `action-deeper` `action-shallower` `action-summary` `action-clear` `action-delete` | Action buttons |
 | `summary-dialog` `summary-field` `summary-save` `summary-cancel` | Summary modal |
 | `export` `new-document` | Header actions |
 
 Do not click words by CSS `.word` index in new recipes if a `data-word-id` is known. After **Load sample**, word id `0` is `The`.
 
 Feature recipes live in [`features/`](features/README.md). Drive the mapped entry points, not a shortcut.
+
+There is no Text / Outline / Split toggle and no separate outline pane.
 
 ## Evidence
 
@@ -90,14 +91,14 @@ Required for a UI proof:
 
 Proof standards:
 
-- Exercise the real click/type path. Reloading after Bullet is how persistence is proved, not reading the store module.
+- Exercise the real click/type path. Reloading after Section is how persistence is proved, not reading the store module.
 - Capture action and resulting state (empty import → sample loaded; tap → `.selected` + visible pins).
-- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; outline rows after Bullet/Sub; dialog text after Summary save.
+- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; `section-header` nodes after Section/Deeper; dialog text after Summary save.
 - No mocks. This app has no backend.
 
 Seeded proof from the first skill run: `evidence/import-sample/`.
 
-**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone.
+**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone. Inline-outline PRs must show (1) a bold section header in the passage, (2) a nested indented subsection, and (3) depth ≥ 2 when practical.
 
 ## Cleanup
 
@@ -122,4 +123,4 @@ All under `.cursor/skills/verify-scripture-outliner/scripts/`:
 
 `scripts/common.sh` is sourced by the shell helpers. `scripts/package.json` pins `playwright-core`. `scripts/node_modules` is local to the skill and gitignored.
 
-Known feature ids: `import-sample`, `word-selection`, `bullet-sub-summary`, `view-modes`, `persistence`.
+Known feature ids: `import-sample`, `word-selection`, `section-deeper-summary`, `inline-outline`, `persistence`.

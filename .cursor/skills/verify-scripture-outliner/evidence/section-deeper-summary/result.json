@@ -1,0 +1,23 @@
+{
+  "feature": "section-deeper-summary",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "depths": [
+      "0",
+      "1"
+    ],
+    "summaries": [
+      "LORD is my shepherd; I shall",
+      "Shepherd care"
+    ],
+    "after": {
+      "png": "evidence/section-deeper-summary/outline.png",
+      "aria": "evidence/section-deeper-summary/outline.aria.txt"
+    }
+  },
+  "at": "2026-09-20T20:07:34.944Z"
+}

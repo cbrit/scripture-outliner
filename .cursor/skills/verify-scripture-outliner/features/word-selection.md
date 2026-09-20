@@ -22,9 +22,7 @@ Selection is word-granular. A first tap selects one word; a second tap extends t
 Preconditions:
 
 - Sample is loaded (run `import-sample` first or use `drive.mjs word-selection`, which loads the sample).
-- Editor `data-view` is `split` or `text` so `passage` is visible.
-
-- **Single word.** Tap the first word. Run `page.getByTestId("word").first().click()` or `page.locator('[data-word-id="0"]').click()`. Exactly one `.selected` word. `pin-start` and `pin-end` are visible (`hidden` attribute absent). `selection-toolbar` is visible with Bullet / Sub / Summary. Sticky `action-bar` shows Clear / Delete only. `selection-hint` is hidden.
+- **Single word.** Tap the first word. Run `page.getByTestId("word").first().click()` or `page.locator('[data-word-id="0"]').click()`. Exactly one `.selected` word. `pin-start` and `pin-end` are visible (`hidden` attribute absent). `selection-toolbar` is visible with Section / Deeper / Shallower / Summary. Sticky `action-bar` shows Clear / Delete only. `selection-hint` is hidden.
 - **Extend.** Tap a later word. Run `page.getByTestId("word").nth(4).click()`. At least two `.selected` words, still inclusive of the first tap. Pins remain visible. Spaces between those words have class `gap selected` so the highlight reads as one bar, not chips.
 - **Clear.** Choose **Clear**. Run `page.getByTestId("action-clear").click()`. Zero `.selected` words. Pins hidden. `action-bar` hidden. `selection-hint` visible again.
 - **Proof.** `drive.mjs word-selection` writes `evidence/word-selection/range.png` and `range.aria.txt` after the extended range exists.
@@ -34,4 +32,5 @@ Preconditions:
 - Pointer travel over 14px on `pointerup` is ignored as a tap. Do not drag when intending a click.
 - Tapping a word that is already covered by a segment may reselect that whole segment instead of starting a new range. Prove selection on a fresh sample with no segments.
 - Pins are `position: absolute` over the passage wrap. Screenshot immediately after click; a scroll without `positionPins` can desync in slow traces, but the app listens to pane scroll.
+- The selection hint sits above the range and to the right of the start pin so later words stay tappable.
 - Word id `0` on the sample is `The`.

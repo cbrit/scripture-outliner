@@ -1,0 +1,44 @@
+{
+  "feature": "inline-outline",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "depths": [
+      "0",
+      "1",
+      "2"
+    ],
+    "texts": [
+      {
+        "depth": "0",
+        "text": "The LORD is shepherd",
+        "placeholder": null,
+        "paddingLeft": 0
+      },
+      {
+        "depth": "1",
+        "text": "Green pastures",
+        "placeholder": null,
+        "paddingLeft": 18.768
+      },
+      {
+        "depth": "2",
+        "text": "Still waters",
+        "placeholder": null,
+        "paddingLeft": 36.064
+      }
+    ],
+    "before": {
+      "png": "evidence/inline-outline/before.png",
+      "aria": "evidence/inline-outline/before.aria.txt"
+    },
+    "after": {
+      "png": "evidence/inline-outline/nested.png",
+      "aria": "evidence/inline-outline/nested.aria.txt"
+    }
+  },
+  "at": "2026-09-20T20:08:36.990Z"
+}
