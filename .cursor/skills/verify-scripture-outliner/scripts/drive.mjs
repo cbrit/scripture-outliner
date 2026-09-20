@@ -219,7 +219,7 @@ async function driveDeselectOutside(page) {
   if (selectedAfterKeep !== 0) {
     throw new Error(`Expected no selection after second margin tap, got ${selectedAfterKeep}`);
   }
-  await clickWordId(page, 0);
+  await clickWordId(page, 20);
   const reselected = await page.locator('[data-testid="word"].selected').count();
   if (reselected !== 1) {
     throw new Error(`Word tap after deselect should select again, got ${reselected}`);

@@ -6,7 +6,7 @@ Tapping outside a text block clears the current selection. Empty padding around 
 
 - `deselect-margin` taps wrap padding (or pane margin) after a word is selected and drops the highlight, pins, and toolbar.
 - `deselect-keeps-segments` marks a Section, selects it, taps empty space, and leaves the header in the passage.
-- `deselect-word-still-works` taps a word again after a margin deselect and gets a new selection.
+- `deselect-word-still-works` taps a word outside the remaining segment after a margin deselect and gets a new one-word selection.
 
 ## How to get to it (user POV)
 
@@ -25,7 +25,7 @@ Preconditions:
 - **Margin tap.** Click `passage-wrap` at `{ x: 8, y: 10 }` (top-left wrap padding, not a word). Do not click `.word`, `.gap`, `section-header`, pins, or the toolbar.
 - **After proof.** Zero `.selected` words. Pins hidden. `action-bar` hidden. `selection-toolbar` hidden. Capture `evidence/deselect-outside/deselected.png`.
 - **Keep segments.** Select words `0`–`6`, choose **Section**, count `section-header`. Select word `0` again, tap wrap padding. Header count is unchanged. Zero `.selected` words.
-- **Word tap still works.** Tap word `0` again. One `.selected` word and visible pins.
+- **Word tap still works.** Tap a word outside the section (`data-word-id="20"`). One `.selected` word and visible pins. Tapping a word still covered by the segment would reselect that whole range.
 
 ## Gotchas
 
