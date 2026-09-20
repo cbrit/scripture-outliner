@@ -216,7 +216,7 @@ button.danger {
 
 .passage-wrap {
   position: relative;
-  padding: 22px 20px 8px;
+  padding: 28px 16px 12px;
 }
 
 .passage {
@@ -458,10 +458,9 @@ button.danger {
   position: absolute;
   z-index: 7;
   display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
+  flex-wrap: nowrap;
+  gap: 1px;
   padding: 3px;
-  max-width: min(100% - 12px, 22rem);
   background: var(--forest);
   color: var(--cream);
   border-radius: 14px;
@@ -490,17 +489,18 @@ button.danger {
 }
 
 .selection-toolbar button {
-  min-width: 64px;
+  min-width: 44px;
   min-height: var(--tap);
-  padding: 0 8px;
+  padding: 0 7px;
   background: transparent;
   color: var(--cream);
   border-radius: 11px;
   display: grid;
   place-items: center;
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   font-weight: 650;
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .selection-toolbar button:active {

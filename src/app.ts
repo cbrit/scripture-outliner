@@ -317,7 +317,7 @@ export function mount(root: HTMLElement): void {
     const rangeLeft = Math.min(startBox.left, endBox.left);
     const toolbar = refs.selectionToolbar;
     const toolbarW = Math.max(toolbar.offsetWidth, 220);
-    const toolbarH = Math.max(toolbar.offsetHeight, 50);
+    const toolbarH = Math.max(toolbar.offsetHeight, 44);
     const pad = 6;
     let top = rangeBottom - origin.top + 8;
     let placement = "below";
