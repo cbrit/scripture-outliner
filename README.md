@@ -4,7 +4,7 @@ Mobile-first PWA for outlining a scripture passage by hand. You import text, sel
 
 One document at a time. It lives in `localStorage` on this device.
 
-**Open on a phone:** https://cbrit.github.io/
+**Open on a phone:** https://cbrit.github.io/scripture-outliner/
 
 ## Run
 
