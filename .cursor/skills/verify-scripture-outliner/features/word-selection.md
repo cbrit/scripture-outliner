@@ -7,7 +7,7 @@ Selection is word-granular. A first tap selects one word; a second tap extends t
 - `select-word` selects exactly one token and shows both pins.
 - `select-extend` taps a second word and highlights the inclusive range as one filled bar, including spaces between words.
 - `select-pins-visible` shows `pin-start` and `pin-end` after a selection exists.
-- `select-clear` drops the selection via **Clear**.
+- `select-clear` drops the selection via **Clear**. Tapping empty padding or margins is a separate path; see [deselect-outside](./deselect-outside.md).
 
 ## How to get to it (user POV)
 
@@ -34,3 +34,4 @@ Preconditions:
 - Pins are `position: absolute` over the passage wrap. Screenshot immediately after click; a scroll without `positionPins` can desync in slow traces, but the app listens to pane scroll.
 - The selection hint sits above the range and to the right of the start pin so later words stay tappable.
 - Word id `0` on the sample is `The`.
+- Tapping wrap padding, pane margins, or empty space between blocks clears the selection. That is not **Clear** and must not delete segments.

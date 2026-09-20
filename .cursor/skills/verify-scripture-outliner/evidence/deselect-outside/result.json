@@ -1,0 +1,24 @@
+{
+  "feature": "deselect-outside",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "selectedBefore": 1,
+    "selectedAfter": 0,
+    "headersAfterSection": 1,
+    "headersAfterDeselect": 1,
+    "reselected": 1,
+    "before": {
+      "png": "evidence/deselect-outside/selected.png",
+      "aria": "evidence/deselect-outside/selected.aria.txt"
+    },
+    "after": {
+      "png": "evidence/deselect-outside/deselected.png",
+      "aria": "evidence/deselect-outside/deselected.aria.txt"
+    }
+  },
+  "at": "2026-09-20T22:21:20.921Z"
+}
