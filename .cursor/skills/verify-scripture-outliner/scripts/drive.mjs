@@ -244,6 +244,7 @@ async function driveSectionDeeperSummary(page) {
   if (placeholder !== 0) {
     throw new Error("Summary header must not be a placeholder");
   }
+  await page.getByTestId("action-clear").click();
   const afterSummary = await snapshot(
     page,
     path.join(evidenceRoot, "section-deeper-summary"),
@@ -357,6 +358,7 @@ async function drivePersistence(page) {
   if (!title.includes("Sample") || headers < 1 || !headerText.includes("Shepherd care")) {
     throw new Error(`Reload lost document (title=${title} headers=${headers} text=${headerText})`);
   }
+  await page.getByTestId("action-clear").click();
   const after = await snapshot(page, path.join(evidenceRoot, "persistence"), "reload", {
     title,
     headers,

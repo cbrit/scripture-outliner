@@ -25,7 +25,7 @@ Preconditions:
 
 - **Section.** Select words 1–6, choose **Section**. Run `page.getByTestId("word").nth(1).click()`, `page.getByTestId("word").nth(6).click()`, `page.getByTestId("action-section").click()`. Zero `section-header` nodes. **Delete** is enabled (exact segment). Capture `after-section.png`.
 - **Deeper.** Shrink to an inner word then extend inside the section, choose **Deeper**. Run `page.getByTestId("word").nth(3).click()`, `page.getByTestId("word").nth(5).click()`, `page.getByTestId("action-deeper").click()`. Still zero `section-header` nodes.
-- **Summary.** With the inner selection, choose **Summary**, type `Shepherd care`, choose **Save**. Run `page.getByTestId("action-summary").click()`, `page.getByTestId("summary-field").fill("Shepherd care")`, `page.getByTestId("summary-save").click()`. One `section-header` at `data-depth="1"` contains that text. The dialog is closed. Capture `after-summary.png`.
+- **Summary.** With the inner selection, choose **Summary**, type `Shepherd care`, choose **Save**. Run `page.getByTestId("action-summary").click()`, `page.getByTestId("summary-field").fill("Shepherd care")`, `page.getByTestId("summary-save").click()`. One `section-header` at `data-depth="1"` contains that text. The dialog is closed. Choose **Clear**, then capture `after-summary.png`.
 - **Delete.** Reselect the exact inner range, choose **Delete**. Run `page.getByTestId("action-delete").click()`. That header is gone. **Delete** is disabled when the selection is not an exact segment.
 - **Proof.** `drive.mjs section-deeper-summary` writes `evidence/section-deeper-summary/after-section.png` (no header) and `after-summary.png` (bold header after Summary).
 
