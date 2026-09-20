@@ -1,0 +1,17 @@
+{
+  "feature": "word-selection",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "selected": 5,
+    "filledGaps": 4,
+    "after": {
+      "png": "evidence/word-selection/range.png",
+      "aria": "evidence/word-selection/range.aria.txt"
+    }
+  },
+  "at": "2026-09-20T19:18:01.079Z"
+}

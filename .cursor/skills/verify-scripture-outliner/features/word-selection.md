@@ -5,7 +5,7 @@ Selection is word-granular. A first tap selects one word; a second tap extends t
 ## Sub-features
 
 - `select-word` selects exactly one token and shows both pins.
-- `select-extend` taps a second word and highlights the inclusive range.
+- `select-extend` taps a second word and highlights the inclusive range as one filled bar, including spaces between words.
 - `select-pins-visible` shows `pin-start` and `pin-end` after a selection exists.
 - `select-clear` drops the selection via **Clear**.
 
@@ -25,7 +25,7 @@ Preconditions:
 - Editor `data-view` is `split` or `text` so `passage` is visible.
 
 - **Single word.** Tap the first word. Run `page.getByTestId("word").first().click()` or `page.locator('[data-word-id="0"]').click()`. Exactly one `.selected` word. `pin-start` and `pin-end` are visible (`hidden` attribute absent). `action-bar` is visible. `selection-hint` is hidden.
-- **Extend.** Tap a later word. Run `page.getByTestId("word").nth(4).click()`. At least two `.selected` words, still inclusive of the first tap. Pins remain visible.
+- **Extend.** Tap a later word. Run `page.getByTestId("word").nth(4).click()`. At least two `.selected` words, still inclusive of the first tap. Pins remain visible. Spaces between those words have class `gap selected` so the highlight reads as one bar, not chips.
 - **Clear.** Choose **Clear**. Run `page.getByTestId("action-clear").click()`. Zero `.selected` words. Pins hidden. `action-bar` hidden. `selection-hint` visible again.
 - **Proof.** `drive.mjs word-selection` writes `evidence/word-selection/range.png` and `range.aria.txt` after the extended range exists.
 

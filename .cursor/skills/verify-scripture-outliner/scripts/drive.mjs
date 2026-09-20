@@ -152,10 +152,15 @@ async function driveWordSelection(page) {
   if (rangeCount < 2) {
     throw new Error(`Expected an extended range, got ${rangeCount} selected words`);
   }
+  const filledGaps = await page.locator(".gap.selected").count();
+  if (filledGaps < 1) {
+    throw new Error("Expected highlighted spaces between selected words");
+  }
   const after = await snapshot(page, path.join(evidenceRoot, "word-selection"), "range", {
     selected: rangeCount,
+    filledGaps,
   });
-  return { selected: rangeCount, after };
+  return { selected: rangeCount, filledGaps, after };
 }
 
 async function driveBulletSubSummary(page) {
