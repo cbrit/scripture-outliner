@@ -63,6 +63,8 @@ Stable handles (prefer `data-testid`):
 | `load-sample` | Load sample |
 | `title-input` | Document title |
 | `editor` | One-page editor (passage is the outline) |
+| `pane-text` | Scrollable passage pane, including empty padding |
+| `passage-wrap` | Passage plus pins/toolbar; top/side padding is not a word |
 | `passage` | Word stream plus inline section headers |
 | `word` | One token; also `data-word-id` |
 | `section-header` | Bold inline heading; `data-depth` is `0`+ and `data-placeholder="true"` when empty |
@@ -123,4 +125,4 @@ All under `.cursor/skills/verify-scripture-outliner/scripts/`:
 
 `scripts/common.sh` is sourced by the shell helpers. `scripts/package.json` pins `playwright-core`. `scripts/node_modules` is local to the skill and gitignored.
 
-Known feature ids: `import-sample`, `word-selection`, `section-deeper-summary`, `inline-outline`, `persistence`.
+Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`.

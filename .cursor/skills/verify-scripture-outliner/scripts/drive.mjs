@@ -3,7 +3,7 @@
  * Drive Scripture Outliner in Chrome via Playwright against the launched preview.
  *
  * Usage: node drive.mjs <feature-id>
- * Features: import-sample | word-selection | section-deeper-summary | inline-outline | persistence
+ * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -155,6 +155,88 @@ async function driveImportSample(page) {
     title,
   });
   return { wordCount, title, before, after };
+}
+
+async function tapWrapPadding(page) {
+  const wrap = page.getByTestId("passage-wrap");
+  await wrap.click({ position: { x: 8, y: 10 }, force: true });
+}
+
+async function driveDeselectOutside(page) {
+  await driveImportSample(page);
+  await clickWordId(page, 0);
+  await page.getByTestId("pin-start").waitFor({ state: "visible" });
+  const selectedBefore = await page.locator('[data-testid="word"].selected').count();
+  if (selectedBefore !== 1) {
+    throw new Error(`Expected 1 selected word before margin tap, got ${selectedBefore}`);
+  }
+  if (!(await page.getByTestId("selection-toolbar").isVisible())) {
+    throw new Error("Selection toolbar should be visible before margin tap");
+  }
+  const before = await snapshot(page, path.join(evidenceRoot, "deselect-outside"), "selected", {
+    step: "selected",
+    selected: selectedBefore,
+  });
+  await tapWrapPadding(page);
+  const selectedAfter = await page.locator('[data-testid="word"].selected').count();
+  if (selectedAfter !== 0) {
+    throw new Error(`Expected selection cleared by margin tap, got ${selectedAfter} selected words`);
+  }
+  if ((await page.getByTestId("pin-start").getAttribute("hidden")) === null) {
+    throw new Error("Start pin should be hidden after margin tap");
+  }
+  if ((await page.getByTestId("pin-end").getAttribute("hidden")) === null) {
+    throw new Error("End pin should be hidden after margin tap");
+  }
+  if (await page.getByTestId("selection-toolbar").isVisible()) {
+    throw new Error("Selection toolbar should be hidden after margin tap");
+  }
+  if (await page.getByTestId("action-bar").isVisible()) {
+    throw new Error("Action bar should be hidden after margin tap");
+  }
+  const after = await snapshot(page, path.join(evidenceRoot, "deselect-outside"), "deselected", {
+    step: "deselected-via-margin",
+    selected: selectedAfter,
+  });
+  await clickWordId(page, 0);
+  await clickWordId(page, 6);
+  await page.getByTestId("action-section").click();
+  await page.getByTestId("section-header").first().waitFor();
+  const headersAfterSection = await page.getByTestId("section-header").count();
+  if (headersAfterSection < 1) {
+    throw new Error("Section did not create a header");
+  }
+  await clickWordId(page, 0);
+  await page.getByTestId("pin-start").waitFor({ state: "visible" });
+  await tapWrapPadding(page);
+  const headersAfterDeselect = await page.getByTestId("section-header").count();
+  const selectedAfterKeep = await page.locator('[data-testid="word"].selected').count();
+  if (headersAfterDeselect !== headersAfterSection) {
+    throw new Error(
+      `Margin tap deleted segments (headers ${headersAfterSection} → ${headersAfterDeselect})`,
+    );
+  }
+  if (selectedAfterKeep !== 0) {
+    throw new Error(`Expected no selection after second margin tap, got ${selectedAfterKeep}`);
+  }
+  await clickWordId(page, 0);
+  const reselected = await page.locator('[data-testid="word"].selected').count();
+  if (reselected !== 1) {
+    throw new Error(`Word tap after deselect should select again, got ${reselected}`);
+  }
+  const pinHidden = await page.getByTestId("pin-start").getAttribute("hidden");
+  if (pinHidden !== null) {
+    throw new Error("Pins should return after a word tap following deselect");
+  }
+  return {
+    selectedBefore,
+    selectedAfter,
+    headersAfterSection,
+    headersAfterDeselect,
+    reselected,
+    before,
+    after,
+  };
 }
 
 async function driveWordSelection(page) {
@@ -328,6 +410,7 @@ async function drivePersistence(page) {
 const drivers = {
   "import-sample": driveImportSample,
   "word-selection": driveWordSelection,
+  "deselect-outside": driveDeselectOutside,
   "section-deeper-summary": driveSectionDeeperSummary,
   "inline-outline": driveInlineOutline,
   persistence: drivePersistence,
