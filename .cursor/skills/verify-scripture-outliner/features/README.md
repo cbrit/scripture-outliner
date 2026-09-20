@@ -40,5 +40,6 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Import and sample](./import-sample.md) covers paste import and the built-in sample.
 - [Word selection and pins](./word-selection.md) covers tap, extend, and pin visibility.
 - [Section, deeper, and summary](./section-deeper-summary.md) covers marking ranges and writing a heading.
+- [Header tap selects the section](./header-select.md) covers tapping a header to reselect that segment’s word range.
 - [Inline outline](./inline-outline.md) covers bold headers in the passage, nested indent, and depth ≥ 2.
 - [Persistence](./persistence.md) covers `localStorage` restore after reload.

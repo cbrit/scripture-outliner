@@ -13,7 +13,7 @@ With a selection, the user marks a depth-0 **Section**, nests with **Deeper** / 
 
 - Select a word range in the text.
 - Choose **Section**, **Deeper**, **Shallower**, or **Summary** on the toolbar attached to the highlight (primary). Clear / Delete stay on the sticky bar.
-- Tap a header to reselect its range.
+- Tap a header to reselect its range. Proven by `drive.mjs header-select` (see [header-select](./header-select.md)).
 - Choose **Delete** when the selection matches a segment exactly.
 
 ## Driving it with verify-so
