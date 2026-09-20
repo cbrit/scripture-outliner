@@ -50,6 +50,7 @@ textarea {
 }
 
 button {
+  touch-action: manipulation;
   min-height: var(--tap);
   border: 0;
   border-radius: 10px;
@@ -57,6 +58,10 @@ button {
   color: var(--cream);
   padding: 0 14px;
   cursor: pointer;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 button:disabled {
@@ -92,9 +97,10 @@ button.danger {
 }
 
 .header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: 8px 10px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--paper) 90%, white);
@@ -190,7 +196,7 @@ button.danger {
   background: var(--paper-2);
   border-radius: 12px;
   padding: 3px;
-  flex-shrink: 0;
+  grid-column: 1 / -1;
 }
 
 .view-toggle button {
@@ -199,6 +205,7 @@ button.danger {
   color: var(--muted);
   padding: 0 10px;
   font-size: 0.85rem;
+  flex: 1;
 }
 
 .view-toggle button[aria-pressed="true"] {
@@ -251,6 +258,14 @@ button.danger {
 .editor[data-view="split"] .pane-text,
 .editor[data-view="split"] .pane-outline {
   flex: 1;
+}
+
+.editor[data-view="split"] .pane-text {
+  min-height: 42%;
+}
+
+.editor[data-view="split"] .pane-outline {
+  min-height: 28%;
 }
 
 .passage-wrap {
@@ -340,9 +355,7 @@ button.danger {
 }
 
 .action-bar {
-  position: sticky;
-  bottom: 0;
-  z-index: 7;
+  flex-shrink: 0;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
