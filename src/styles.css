@@ -394,9 +394,7 @@ button.danger {
 
 .action-bar {
   flex-shrink: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+  display: block;
   padding: 8px 12px calc(10px + var(--safe-bottom));
   background: color-mix(in srgb, var(--paper) 88%, white);
   border-top: 1px solid var(--line);
@@ -406,12 +404,7 @@ button.danger {
   display: none;
 }
 
-.action-bar .primary {
-  font-weight: 650;
-}
-
 .action-secondary {
-  grid-column: 1 / -1;
   display: flex;
   gap: 8px;
 }
@@ -419,6 +412,54 @@ button.danger {
 .action-secondary button {
   flex: 1;
   min-height: 40px;
+}
+
+.selection-toolbar {
+  position: absolute;
+  z-index: 7;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--forest);
+  color: var(--cream);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.selection-toolbar[hidden] {
+  display: none;
+}
+
+.selection-toolbar::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  border: 6px solid transparent;
+}
+
+.selection-toolbar[data-placement="below"]::before {
+  top: -6px;
+  border-bottom-color: var(--forest);
+}
+
+.selection-toolbar[data-placement="above"]::before {
+  bottom: -6px;
+  border-top-color: var(--forest);
+}
+
+.selection-toolbar button {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0;
+  background: transparent;
+  color: var(--cream);
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+}
+
+.selection-toolbar button:active {
+  background: var(--forest-2);
 }
 
 .outline-list {

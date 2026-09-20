@@ -44,6 +44,7 @@ type Refs = {
   outlineEmpty: HTMLElement;
   actionBar: HTMLElement;
   hint: HTMLElement;
+  selectionToolbar: HTMLElement;
   summaryDialog: HTMLDialogElement;
   summaryField: HTMLTextAreaElement;
 };
@@ -105,11 +106,13 @@ export function mount(root: HTMLElement): void {
     renderOutline();
     renderActions();
     positionPins();
+    positionToolbar();
     if (opts?.reveal) {
       revealSelection();
     }
     requestAnimationFrame(() => {
       positionPins();
+      positionToolbar();
       if (opts?.reveal) {
         revealSelection();
       }
@@ -305,11 +308,13 @@ export function mount(root: HTMLElement): void {
   function renderActions(): void {
     if (!doc || !doc.selection) {
       refs.actionBar.hidden = true;
+      refs.selectionToolbar.hidden = true;
       refs.hint.hidden = !doc;
       return;
     }
     refs.hint.hidden = true;
     refs.actionBar.hidden = false;
+    refs.selectionToolbar.hidden = false;
     const matched = exactSegment(doc.segments, doc.selection);
     const del = refs.actionBar.querySelector("[data-delete]");
     if (del instanceof HTMLButtonElement) {
@@ -343,6 +348,51 @@ export function mount(root: HTMLElement): void {
     refs.pinStart.style.top = `${startBox.top - origin.top}px`;
     refs.pinEnd.style.left = `${endBox.right - origin.left}px`;
     refs.pinEnd.style.top = `${(endBox.top + endBox.bottom) / 2 - origin.top}px`;
+  }
+
+  function positionToolbar(): void {
+    if (!doc || !doc.selection) {
+      refs.selectionToolbar.hidden = true;
+      return;
+    }
+    const startEl = wordElement(doc.selection.start);
+    const endEl = wordElement(doc.selection.end);
+    const wrap = refs.passage.parentElement;
+    if (!startEl || !endEl || !wrap) {
+      refs.selectionToolbar.hidden = true;
+      return;
+    }
+    refs.selectionToolbar.hidden = false;
+    const origin = wrap.getBoundingClientRect();
+    const startBox = startEl.getBoundingClientRect();
+    const endBox = endEl.getBoundingClientRect();
+    const rangeTop = Math.min(startBox.top, endBox.top);
+    const rangeBottom = Math.max(startBox.bottom, endBox.bottom);
+    const rangeLeft = Math.min(startBox.left, endBox.left);
+    const toolbar = refs.selectionToolbar;
+    const toolbarW = Math.max(toolbar.offsetWidth, 148);
+    const toolbarH = Math.max(toolbar.offsetHeight, 50);
+    const pad = 6;
+    let top = rangeBottom - origin.top + 8;
+    let placement = "below";
+    if (top + toolbarH > wrap.clientHeight - pad) {
+      top = rangeTop - origin.top - toolbarH - 8;
+      placement = "above";
+    }
+    if (top < pad) {
+      top = pad;
+      placement = "below";
+    }
+    let left = rangeLeft - origin.left;
+    if (left + toolbarW > wrap.clientWidth - pad) {
+      left = wrap.clientWidth - toolbarW - pad;
+    }
+    if (left < pad) {
+      left = pad;
+    }
+    toolbar.style.left = `${left}px`;
+    toolbar.style.top = `${top}px`;
+    toolbar.dataset.placement = placement;
   }
 
   function wordElement(id: WordId): HTMLSpanElement | null {
@@ -454,6 +504,7 @@ export function mount(root: HTMLElement): void {
     renderPassage();
     renderActions();
     positionPins();
+    positionToolbar();
   }
 
   function importTextAs(title: string, raw: string): void {
@@ -669,13 +720,13 @@ export function mount(root: HTMLElement): void {
     });
   }
 
-  refs.actionBar.querySelector("[data-bullet]")?.addEventListener("click", () =>
+  refs.selectionToolbar.querySelector("[data-bullet]")?.addEventListener("click", () =>
     addBullet(0),
   );
-  refs.actionBar.querySelector("[data-sub]")?.addEventListener("click", () =>
+  refs.selectionToolbar.querySelector("[data-sub]")?.addEventListener("click", () =>
     addBullet(1),
   );
-  refs.actionBar.querySelector("[data-summary]")?.addEventListener(
+  refs.selectionToolbar.querySelector("[data-summary]")?.addEventListener(
     "click",
     openSummary,
   );
@@ -700,10 +751,16 @@ export function mount(root: HTMLElement): void {
     },
   );
 
-  refs.paneText.addEventListener("scroll", () => positionPins(), {
+  refs.paneText.addEventListener("scroll", () => {
+    positionPins();
+    positionToolbar();
+  }, {
     passive: true,
   });
-  window.addEventListener("resize", () => positionPins());
+  window.addEventListener("resize", () => {
+    positionPins();
+    positionToolbar();
+  });
 
   document.addEventListener(
     "touchmove",
@@ -735,6 +792,7 @@ function bind(root: HTMLElement): Refs {
     outlineEmpty: requireEl(root, "[data-outline-empty]", HTMLElement),
     actionBar: requireEl(root, "[data-action-bar]", HTMLElement),
     hint: requireEl(root, "[data-hint]", HTMLElement),
+    selectionToolbar: requireEl(root, "[data-selection-toolbar]", HTMLElement),
     summaryDialog: requireEl(root, "[data-summary-dialog]", HTMLDialogElement),
     summaryField: requireEl(root, "[data-summary-field]", HTMLTextAreaElement),
   };
@@ -775,6 +833,40 @@ function shellHtml(): string {
                 <div class="passage" data-passage data-testid="passage"></div>
                 <button type="button" class="pin pin-start" data-pin-start data-testid="pin-start" hidden aria-label="Selection start"></button>
                 <button type="button" class="pin pin-end" data-pin-end data-testid="pin-end" hidden aria-label="Selection end"></button>
+                <div
+                  class="selection-toolbar"
+                  data-selection-toolbar
+                  data-testid="selection-toolbar"
+                  hidden
+                >
+                  <button type="button" data-bullet data-testid="action-bullet" aria-label="Bullet" title="Bullet">
+                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle cx="6" cy="7" r="2.2" fill="currentColor" />
+                      <rect x="11" y="5.9" width="10" height="2.2" rx="1" fill="currentColor" />
+                      <circle cx="6" cy="12" r="2.2" fill="currentColor" />
+                      <rect x="11" y="10.9" width="10" height="2.2" rx="1" fill="currentColor" />
+                      <circle cx="6" cy="17" r="2.2" fill="currentColor" />
+                      <rect x="11" y="15.9" width="10" height="2.2" rx="1" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button type="button" data-sub data-testid="action-sub" aria-label="Sub" title="Sub">
+                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle cx="10" cy="7" r="2.2" fill="currentColor" />
+                      <rect x="15" y="5.9" width="6" height="2.2" rx="1" fill="currentColor" />
+                      <circle cx="10" cy="12" r="2.2" fill="currentColor" />
+                      <rect x="15" y="10.9" width="6" height="2.2" rx="1" fill="currentColor" />
+                      <circle cx="10" cy="17" r="2.2" fill="currentColor" />
+                      <rect x="15" y="15.9" width="6" height="2.2" rx="1" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button type="button" data-summary data-testid="action-summary" aria-label="Summary" title="Summary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="4" y="5" width="16" height="2.2" rx="1" fill="currentColor" />
+                      <rect x="4" y="11" width="12" height="2.2" rx="1" fill="currentColor" />
+                      <rect x="4" y="17" width="8" height="2.2" rx="1" fill="currentColor" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <p class="hint" data-hint data-testid="selection-hint">Tap a word to select. Tap a second word to extend. Drag the pins to snap.</p>
             </div>
@@ -784,9 +876,6 @@ function shellHtml(): string {
             </div>
           </div>
           <div class="action-bar" data-action-bar data-testid="action-bar" hidden>
-            <button type="button" class="primary" data-bullet data-testid="action-bullet">Bullet</button>
-            <button type="button" class="primary" data-sub data-testid="action-sub">Sub</button>
-            <button type="button" class="primary" data-testid="action-summary" data-summary>Summary</button>
             <div class="action-secondary">
               <button type="button" class="secondary" data-clear data-testid="action-clear">Clear</button>
               <button type="button" class="danger" data-delete data-testid="action-delete">Delete</button>
