@@ -5,6 +5,13 @@ import {
 import type { Document, Passage, Segment, Selection, Word } from "./types";
 
 const STORAGE_KEY = "scripture-outliner.document.v1";
+const PREFS_KEY = "scripture-outliner.prefs.v1";
+
+export type Prefs = {
+  showText: boolean;
+};
+
+const DEFAULT_PREFS: Prefs = { showText: true };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -149,4 +156,27 @@ export function saveDocument(doc: Document): void {
 
 export function clearDocument(): void {
   localStorage.removeItem(STORAGE_KEY);
+}
+
+export function parsePrefs(raw: unknown): Prefs {
+  if (!isRecord(raw) || typeof raw.showText !== "boolean") {
+    return DEFAULT_PREFS;
+  }
+  return { showText: raw.showText };
+}
+
+export function loadPrefs(): Prefs {
+  try {
+    const stored = localStorage.getItem(PREFS_KEY);
+    if (!stored) {
+      return DEFAULT_PREFS;
+    }
+    return parsePrefs(JSON.parse(stored) as unknown);
+  } catch {
+    return DEFAULT_PREFS;
+  }
+}
+
+export function savePrefs(prefs: Prefs): void {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
 }

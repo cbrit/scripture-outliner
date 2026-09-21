@@ -6,7 +6,7 @@ This directory is the maintained source for verifying user-facing behavior. Read
 
 - Launch via `.cursor/skills/verify-scripture-outliner/scripts/launch.sh`.
 - Confirm `.cursor/skills/verify-scripture-outliner/scripts/doctor.sh` prints `OK` for a `127.0.0.1` preview URL.
-- Start from a cleared `scripture-outliner.document.v1` (the drive helper does this).
+- Start from a cleared `scripture-outliner.document.v1` and `scripture-outliner.prefs.v1` (the drive helper does this).
 - Viewport 390×844 unless a recipe says otherwise.
 - Never drive a preview this run did not start. Never drive Whatley sites or `https://cbrit.github.io/` root.
 
@@ -44,4 +44,5 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Header tap selects the section](./header-select.md) covers tapping a header to reselect that segment’s word range.
 - [Icon selection toolbar](./icon-toolbar.md) covers icon-only Deeper, Shallower, Summary, and Delete.
 - [Inline outline](./inline-outline.md) covers bold headers in the passage, nested indent, depth ≥ 2, and untinted body text.
+- [Show text](./show-text.md) covers the header checkbox that hides body words and leaves nested headers.
 - [Persistence](./persistence.md) covers `localStorage` restore after reload.

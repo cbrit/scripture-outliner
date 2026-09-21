@@ -60,7 +60,8 @@ Install and the service worker require a secure context: `localhost` or HTTPS.
 2. Tap a word to select it. Tap a second word to extend the range. Drag the two pins; they snap to word edges only.
 3. The selection toolbar is icon-only: **Deeper**, **Shallower**, **Summary**, and **Delete** (X). **Deeper** creates a range on loose text (depth 0 with no parent) and nests an inner range. **Shallower** outdents when the selection matches a nested segment. **Summary** writes the bold header. A header appears only after a non-empty Summary. Tap the margin to drop the selection.
 4. Headers sit in the passage above their body. Nested ranges start on a new line and indent by depth.
-5. Reload: the current document is restored from `localStorage`. **Export** downloads Markdown with ATX headers by depth (and copies it when the clipboard is available).
+5. **Show text** (header checkbox, default on) hides or shows body words. It is an app pref in `scripture-outliner.prefs.v1`, not a document field. **New** keeps this setting.
+6. Reload: the current document is restored from `localStorage`. **Export** downloads Markdown with ATX headers by depth (and copies it when the clipboard is available).
 
 ## Manual QA (~390px viewport)
 
@@ -73,8 +74,9 @@ Use device mode at **390×844** (or an actual phone). After `npm run dev`:
 5. **Deeper** on the selected range, then select an inner phrase and **Deeper** again. No header yet. The subsection starts on its own indented line.
 6. **Deeper** again on a still-inner range (depth 2). **Summary**, type a sentence, Save. The bold header appears above that range. Empty summaries do not render a header.
 7. Body text keeps the passage color at every depth. Only the current selection fills as one continuous bar. There is no Text / Outline / Split toggle.
-8. Reload the tab. Title, nested segments, and summaries return.
-9. **Export** produces a `.md` file with `#` title and `##` / `###` / `####` outline headings.
+8. Uncheck **Show text**. Body words are gone. Headers and indent remain. Reload keeps the off state from `scripture-outliner.prefs.v1`. Check it again to restore words.
+9. Reload the tab. Title, nested segments, and summaries return.
+10. **Export** produces a `.md` file with `#` title and `##` / `###` / `####` outline headings.
 
 Secondary: tap the margin (or empty space around the passage) to drop the selection. **Delete** (X on the selection toolbar) removes the segment that exactly matches the selection. **New** returns to import. There is no Clear button.
 
