@@ -4,6 +4,7 @@ h1: Scripture Outliner
 extra: {"step":"docx-menu-open"}
 ---
 SCRIPTURE OUTLINER
+Show text
 Export
 Markdown (.md)
 Word (.docx)

@@ -4,6 +4,7 @@ h1: Scripture Outliner
 extra: {"step":"markdown-downloaded","suggested":"sample.md"}
 ---
 SCRIPTURE OUTLINER
+Show text
 Export
 New
 The LORD is shepherd
