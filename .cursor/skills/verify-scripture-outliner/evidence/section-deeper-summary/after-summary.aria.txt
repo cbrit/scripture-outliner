@@ -4,14 +4,14 @@ h1: Scripture Outliner
 extra: {"depths":["1"],"summaries":["Shepherd care"]}
 ---
 SCRIPTURE OUTLINER
+Show text
 Export
 New
 The
 LORD is
 Shepherd care
 my shepherd; I
-shall
-not want.
+shall not want.
 He maketh me to lie down in green pastures: he leadeth me beside the still waters.
 He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.
 Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.

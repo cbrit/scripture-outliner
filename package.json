@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
-    "test": "node --experimental-strip-types --test src/exportDocument.test.ts"
+    "test": "node --experimental-strip-types --test src/exportDocument.test.ts src/summaryEdit.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

@@ -1,0 +1,17 @@
+{
+  "feature": "summary-modal-baseline",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "dialogPresent": true,
+  "screenshots": [
+    "01-selection-toolbar.png",
+    "02-modal-empty-new.png",
+    "03-modal-typed.png",
+    "04-header-after-save.png",
+    "05-modal-prefilled-existing.png",
+    "06-cancel-leaves-header.png"
+  ]
+}

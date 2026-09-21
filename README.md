@@ -6,9 +6,7 @@ One document at a time. It lives in `localStorage` on this device.
 
 **Open on a phone:** https://cbrit.github.io/scripture-outliner/
 
-That URL is the user-site subdirectory (`cbrit.github.io` → `/scripture-outliner/` only). It does not replace `https://cbrit.github.io/` and does not use the Whatley Solutions / Whatley Brothers Pages sites.
-
-Project Pages from this repo (same path once public) is the preferred host. `.github/workflows/pages.yml` builds with `VITE_BASE=/scripture-outliner/` and deploys via Actions on push to `main`. The deploy agent cannot make this repository public or enable Pages (`visibility` / `pages` API 403: *Resource not accessible by integration*). Until the owner sets the repo to **public** and Pages source to **GitHub Actions**, use the user-site URL above.
+Project Pages from this repo is the preferred host. `.github/workflows/pages.yml` builds with `VITE_BASE=/scripture-outliner/` and deploys via Actions on push to `main`. The deploy agent cannot make this repository public or enable Pages (`visibility` / `pages` API 403: *Resource not accessible by integration*). Until the owner sets the repo to **public** and Pages source to **GitHub Actions**, use the user-site URL above.
 
 ## Verification
 
@@ -58,7 +56,7 @@ Install and the service worker require a secure context: `localhost` or HTTPS.
 
 1. Paste text, or tap **Load sample**.
 2. Tap a word to select it. Tap a second word to extend the range. Drag the two pins; they snap to word edges only.
-3. The selection toolbar is icon-only: **Deeper**, **Shallower**, **Summary**, and **Delete** (X). **Deeper** creates a range on loose text (depth 0 with no parent) and nests an inner range. **Shallower** outdents when the selection matches a nested segment. **Summary** writes the bold header. A header appears only after a non-empty Summary. Tap the margin to drop the selection.
+3. The selection toolbar is icon-only: **Deeper**, **Shallower**, **Summary**, and **Delete** (X). **Deeper** creates a range on loose text (depth 0 with no parent) and nests an inner range. **Shallower** outdents when the selection matches a nested segment. **Summary** types in the header slot. Tap away or press Enter to commit. There is no Save dialog. A header appears only after a non-empty Summary. Tap the margin to drop the selection.
 4. Headers sit in the passage above their body. Nested ranges start on a new line and indent by depth.
 5. **Show text** (header checkbox, default on) hides or shows body words. It is an app pref in `scripture-outliner.prefs.v1`, not a document field. **New** keeps this setting.
 6. Reload: the current document is restored from `localStorage`. **Export** opens a menu. Markdown downloads `.md` with the same headers and body the screen shows. Word downloads `.docx`. If body text is hidden, export writes headers only.
@@ -72,7 +70,7 @@ Use device mode at **390×844** (or an actual phone). After `npm run dev`:
 3. Tap **want.** The range is word-aligned (`The` … `want.`), not a character highlight.
 4. Drag the end pin onto **shepherd;** — it snaps to that word, never mid-token.
 5. **Deeper** on the selected range, then select an inner phrase and **Deeper** again. No header yet. The subsection starts on its own indented line.
-6. **Deeper** again on a still-inner range (depth 2). **Summary**, type a sentence, Save. The bold header appears above that range. Empty summaries do not render a header.
+6. **Deeper** again on a still-inner range (depth 2). **Summary**, type a sentence in the header slot, tap away or press Enter. The bold header appears above that range. Empty summaries do not render a header.
 7. Body text keeps the passage color at every depth. Only the current selection fills as one continuous bar. There is no Text / Outline / Split toggle.
 8. Uncheck **Show text**. Body words are gone. Headers and indent remain. Reload keeps the off state from `scripture-outliner.prefs.v1`. Check it again to restore words.
 9. Reload the tab. Title, nested segments, and summaries return.

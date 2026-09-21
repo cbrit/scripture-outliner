@@ -1,0 +1,48 @@
+{
+  "feature": "inline-header-edit",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "inPassage": true,
+    "headerText": "The LORD is shepherd",
+    "slotDx": 0,
+    "slotDy": 0,
+    "prefilled": "The LORD is shepherd",
+    "tapAwayText": "Shepherd care",
+    "headersAfterEmptyNew": 1,
+    "headersAfterClear": 0,
+    "stored": {
+      "start": 0,
+      "end": 8,
+      "summary": ""
+    },
+    "newField": {
+      "png": "evidence/inline-header-edit/new-field.png",
+      "aria": "evidence/inline-header-edit/new-field.aria.txt"
+    },
+    "newCommitted": {
+      "png": "evidence/inline-header-edit/new-committed.png",
+      "aria": "evidence/inline-header-edit/new-committed.aria.txt"
+    },
+    "editPrefilled": {
+      "png": "evidence/inline-header-edit/edit-prefilled.png",
+      "aria": "evidence/inline-header-edit/edit-prefilled.aria.txt"
+    },
+    "tapAwayCommit": {
+      "png": "evidence/inline-header-edit/tap-away-commit.png",
+      "aria": "evidence/inline-header-edit/tap-away-commit.aria.txt"
+    },
+    "tapAwayEmptyNew": {
+      "png": "evidence/inline-header-edit/tap-away-empty-new.png",
+      "aria": "evidence/inline-header-edit/tap-away-empty-new.aria.txt"
+    },
+    "tapAwayEmptyExisting": {
+      "png": "evidence/inline-header-edit/tap-away-empty-existing.png",
+      "aria": "evidence/inline-header-edit/tap-away-empty-existing.aria.txt"
+    }
+  },
+  "at": "2026-09-21T03:55:49.546Z"
+}
