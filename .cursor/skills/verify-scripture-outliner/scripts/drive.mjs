@@ -3,7 +3,7 @@
  * Drive Scripture Outliner in Chrome via Playwright against the launched preview.
  *
  * Usage: node drive.mjs <feature-id>
- * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar | show-text | export-markdown | export-headers-only | export-docx | header-body-spacing | delete-rejoin
+ * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar | show-text | export-markdown | export-headers-only | export-docx | header-body-spacing | delete-rejoin | inline-header-edit
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -173,9 +173,14 @@ async function clickWordId(page, id) {
 
 async function saveSummary(page, text) {
   await page.getByTestId("action-summary").click();
-  await page.getByTestId("summary-field").fill(text);
-  await page.getByTestId("summary-save").click();
-  await page.getByTestId("summary-dialog").waitFor({ state: "hidden" });
+  const field = page.getByTestId("summary-field");
+  await field.waitFor({ state: "visible" });
+  await field.fill(text);
+  await field.press("Enter");
+  await field.waitFor({ state: "hidden" });
+  if (text.trim()) {
+    await page.getByTestId("section-header").first().waitFor();
+  }
 }
 
 async function headerDepths(page) {
@@ -1240,6 +1245,171 @@ async function driveDeleteRejoin(page) {
   return { before, afterSection, afterDelete, afterSiblings, afterSiblingDelete };
 }
 
+async function boxOf(page, testId) {
+  const box = await page.getByTestId(testId).first().boundingBox();
+  if (!box) {
+    throw new Error(`${testId} has no bounding box`);
+  }
+  return box;
+}
+
+async function driveInlineHeaderEdit(page) {
+  await driveImportSample(page);
+  const dir = path.join(evidenceRoot, "inline-header-edit");
+
+  await clickWordId(page, 0);
+  await clickWordId(page, 8);
+  await page.getByTestId("action-summary").click();
+  const field = page.getByTestId("summary-field");
+  await field.waitFor({ state: "visible" });
+  const inPassage = await field.evaluate(
+    (el) => el.closest("[data-testid='passage']") !== null,
+  );
+  if (!inPassage) {
+    throw new Error("summary-field must mount inside passage");
+  }
+  if ((await page.getByTestId("summary-dialog").count()) !== 0) {
+    throw new Error("summary-dialog must be absent");
+  }
+  if ((await page.getByTestId("summary-save").count()) !== 0) {
+    throw new Error("summary-save must be absent");
+  }
+  await field.fill("The LORD is shepherd");
+  const fieldBox = await boxOf(page, "summary-field");
+  const newField = await snapshot(page, dir, "new-field", {
+    step: "new-header-field",
+    fieldBox,
+  });
+  await field.press("Enter");
+  await field.waitFor({ state: "hidden" });
+  await page.getByTestId("section-header").first().waitFor();
+  const headerText = ((await page.getByTestId("section-header").first().textContent()) ?? "").trim();
+  if (headerText !== "The LORD is shepherd") {
+    throw new Error(`Expected committed header text, got ${JSON.stringify(headerText)}`);
+  }
+  const headerBox = await boxOf(page, "section-header");
+  const slotDx = Math.abs(fieldBox.x - headerBox.x);
+  const slotDy = Math.abs(fieldBox.y - headerBox.y);
+  if (slotDx > 8 || slotDy > 8) {
+    throw new Error(
+      `Field vs header slot drifted dx=${slotDx.toFixed(2)} dy=${slotDy.toFixed(2)}`,
+    );
+  }
+  const newCommitted = await snapshot(page, dir, "new-committed", {
+    step: "new-header-committed",
+    headerBox,
+    slotDx,
+    slotDy,
+  });
+
+  await page.getByTestId("section-header").first().click();
+  await waitForExactSegment(page);
+  await page.getByTestId("action-summary").click();
+  const editField = page.getByTestId("summary-field");
+  await editField.waitFor({ state: "visible" });
+  const prefilled = await editField.inputValue();
+  if (prefilled !== "The LORD is shepherd") {
+    throw new Error(`Expected prefilled field, got ${JSON.stringify(prefilled)}`);
+  }
+  const editPrefilled = await snapshot(page, dir, "edit-prefilled", {
+    step: "edit-existing-prefilled",
+    prefilled,
+  });
+  await editField.press("Enter");
+  await editField.waitFor({ state: "hidden" });
+
+  await page.getByTestId("section-header").first().click();
+  await waitForExactSegment(page);
+  await page.getByTestId("action-summary").click();
+  const tapField = page.getByTestId("summary-field");
+  await tapField.waitFor({ state: "visible" });
+  await tapField.fill("Shepherd care");
+  await tapWrapPadding(page);
+  await tapField.waitFor({ state: "hidden" });
+  const tapAwayText = ((await page.getByTestId("section-header").first().textContent()) ?? "").trim();
+  if (tapAwayText !== "Shepherd care") {
+    throw new Error(`Tap-away should commit field text, got ${JSON.stringify(tapAwayText)}`);
+  }
+  const tapAwayCommit = await snapshot(page, dir, "tap-away-commit", {
+    step: "tap-away-with-text",
+    tapAwayText,
+  });
+
+  await clickWordId(page, 20);
+  await clickWordId(page, 24);
+  await page.getByTestId("action-summary").click();
+  const emptyNewField = page.getByTestId("summary-field");
+  await emptyNewField.waitFor({ state: "visible" });
+  await emptyNewField.fill("");
+  const headersBeforeEmptyNew = await page.getByTestId("section-header").count();
+  await tapWrapPadding(page);
+  await emptyNewField.waitFor({ state: "hidden" });
+  const headersAfterEmptyNew = await page.getByTestId("section-header").count();
+  if (headersAfterEmptyNew !== headersBeforeEmptyNew) {
+    throw new Error(
+      `Empty new range inserted a header (${headersBeforeEmptyNew} → ${headersAfterEmptyNew})`,
+    );
+  }
+  if (headersAfterEmptyNew !== 1) {
+    throw new Error(`Expected the existing header to remain, got ${headersAfterEmptyNew}`);
+  }
+  const tapAwayEmptyNew = await snapshot(page, dir, "tap-away-empty-new", {
+    step: "tap-away-empty-new",
+    headersAfterEmptyNew,
+  });
+
+  await page.getByTestId("section-header").first().click();
+  await waitForExactSegment(page);
+  const existingRange = await storedFirstSegment(page);
+  await page.getByTestId("action-summary").click();
+  const emptyExistingField = page.getByTestId("summary-field");
+  await emptyExistingField.waitFor({ state: "visible" });
+  await emptyExistingField.fill("");
+  await tapWrapPadding(page);
+  await emptyExistingField.waitFor({ state: "hidden" });
+  const headersAfterClear = await page.getByTestId("section-header").count();
+  if (headersAfterClear !== 0) {
+    throw new Error(`Empty existing should hide the header, got ${headersAfterClear}`);
+  }
+  const stored = await storedFirstSegment(page);
+  if (stored.start !== existingRange.start || stored.end !== existingRange.end) {
+    throw new Error(`Segment range changed: ${JSON.stringify({ existingRange, stored })}`);
+  }
+  if (stored.summary !== "") {
+    throw new Error(`Expected cleared summary, got ${JSON.stringify(stored.summary)}`);
+  }
+  await clickWordId(page, existingRange.start);
+  await waitForExactSegment(page);
+  const reselected = await selectedWordIds(page);
+  const expectedCount = existingRange.end - existingRange.start + 1;
+  if (reselected.length !== expectedCount) {
+    throw new Error(`Expected reselect of ${expectedCount} words, got ${JSON.stringify(reselected)}`);
+  }
+  const tapAwayEmptyExisting = await snapshot(page, dir, "tap-away-empty-existing", {
+    step: "tap-away-empty-existing",
+    stored,
+    reselected,
+  });
+
+  return {
+    inPassage,
+    headerText,
+    slotDx,
+    slotDy,
+    prefilled,
+    tapAwayText,
+    headersAfterEmptyNew,
+    headersAfterClear,
+    stored,
+    newField,
+    newCommitted,
+    editPrefilled,
+    tapAwayCommit,
+    tapAwayEmptyNew,
+    tapAwayEmptyExisting,
+  };
+}
+
 const drivers = {
   "import-sample": driveImportSample,
   "word-selection": driveWordSelection,
@@ -1255,6 +1425,7 @@ const drivers = {
   "export-docx": driveExportDocx,
   "header-body-spacing": driveHeaderBodySpacing,
   "delete-rejoin": driveDeleteRejoin,
+  "inline-header-edit": driveInlineHeaderEdit,
 };
 
 ensurePlaywright();

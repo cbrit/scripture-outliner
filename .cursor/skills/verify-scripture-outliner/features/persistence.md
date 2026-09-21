@@ -19,7 +19,7 @@ Preconditions:
 
 - Preview origin is the launched `127.0.0.1` port (storage is origin-scoped).
 
-- **Save.** Load sample, select a word, choose **Deeper**. Run `drive.mjs persistence` or the same clicks. `page.evaluate(() => localStorage.getItem("scripture-outliner.document.v1"))` is non-null JSON with `passage.title` equal to `Sample` and `segments.length >= 1`. Depth is a number (legacy `0 | 1` still parses). Zero `section-header` nodes until Summary is saved.
+- **Save.** Load sample, select a word, choose **Deeper**. Run `drive.mjs persistence` or the same clicks. `page.evaluate(() => localStorage.getItem("scripture-outliner.document.v1"))` is non-null JSON with `passage.title` equal to `Sample` and `segments.length >= 1`. Depth is a number (legacy `0 | 1` still parses). Zero `section-header` nodes until Summary is committed.
 - **Summary then reload.** Write a Summary, then `page.reload()`. `title-input` is still `Sample`. The saved `section-header` exists. `import-view` is hidden.
 - **New.** Choose **New** and accept the confirm. Run `page.getByTestId("new-document").click()` with a dialog handler that accepts. `import-view` is visible. Storage key is gone.
 - **Proof.** `drive.mjs persistence` writes `evidence/persistence/reload.png` after reload, with title and the Summary header still present.

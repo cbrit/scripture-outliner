@@ -6,7 +6,7 @@ With a selection, the user marks a range with **Deeper**, outdents with **Shallo
 
 - `deeper-create` marks a range on loose text (depth 0 with no parent). No header is created or shown.
 - `deeper-nest` nests an inner range (depth 1). No header until that range has a Summary.
-- `summary-write` opens the dialog, saves typed text, and shows a bold header for that range.
+- `summary-write` opens the inline field, commits typed text with Enter, and shows a bold header for that range.
 - `segment-delete` removes the segment that exactly matches the selection.
 
 ## How to get to it (user POV)
@@ -25,13 +25,13 @@ Preconditions:
 
 - **Deeper.** Select words 1–6, choose **Deeper**. Run `page.getByTestId("word").nth(1).click()`, `page.getByTestId("word").nth(6).click()`, `page.getByTestId("action-deeper").click()`. Zero `section-header` nodes. **Delete** is enabled (exact segment). Capture `after-deeper.png`.
 - **Nest.** Shrink to an inner word then extend inside the parent, choose **Deeper**. Run `page.getByTestId("word").nth(3).click()`, `page.getByTestId("word").nth(5).click()`, `page.getByTestId("action-deeper").click()`. Still zero `section-header` nodes. **Shallower** is enabled.
-- **Summary.** With the inner selection, choose **Summary**, type `Shepherd care`, choose **Save**. Run `page.getByTestId("action-summary").click()`, `page.getByTestId("summary-field").fill("Shepherd care")`, `page.getByTestId("summary-save").click()`. One `section-header` at `data-depth="1"` contains that text. The dialog is closed. Tap the pane margin to hide chrome, then capture `after-summary.png`.
+- **Summary.** With the inner selection, choose **Summary**, type `Shepherd care`, press Enter. Run `page.getByTestId("action-summary").click()`, `page.getByTestId("summary-field").fill("Shepherd care")`, `page.getByTestId("summary-field").press("Enter")`. One `section-header` at `data-depth="1"` contains that text. The field is gone. Tap the pane margin to hide chrome, then capture `after-summary.png`.
 - **Delete.** Reselect the exact inner range, choose **Delete**. Run `page.getByTestId("action-delete").click()`. That header is gone. **Delete** is disabled when the selection is not an exact segment.
 - **Proof.** `drive.mjs section-deeper-summary` writes `evidence/section-deeper-summary/after-deeper.png` (no header) and `after-summary.png` (bold header after Summary). After that snapshot, tap the header and **Shallower**; `data-depth` becomes `0`.
 
 ## Gotchas
 
-- **Summary** on a new range also creates a segment (depth from `suggestedDepth`) and is the only action that shows a header. Assert the header text, not only that the dialog closed.
+- **Summary** on a new range also creates a segment (depth from `suggestedDepth`) and is the only action that shows a header. Assert the header text, not only that the field closed.
 - **Delete** no-ops unless the selection exactly matches a segment. Partial overlaps do not enable a useful delete.
 - There is no Section (H) control. **Deeper** on loose text is the structure-creating action.
 - **Shallower** is disabled when there is no exact segment or the segment is already depth 0.

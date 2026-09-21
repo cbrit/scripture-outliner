@@ -20,7 +20,7 @@ Preconditions:
 
 - Sample loaded. Word id `0` is `The`. Words `0–8` are `The LORD is my shepherd; I shall not want.`
 
-- **Range with summary.** Select `data-word-id` 0 then 8, choose **Deeper**. No `section-header` yet. Then **Summary** `The LORD is shepherd`. Run `page.locator('[data-word-id="0"]').click()`, `page.locator('[data-word-id="8"]').click()`, `page.getByTestId("action-deeper").click()`, fill and save summary. One `section-header` contains that text. Stored `segments[0]` is `{ start: 0, end: 8 }`.
+- **Range with summary.** Select `data-word-id` 0 then 8, choose **Deeper**. No `section-header` yet. Then **Summary** `The LORD is shepherd`. Run `page.locator('[data-word-id="0"]').click()`, `page.locator('[data-word-id="8"]').click()`, `page.getByTestId("action-deeper").click()`, fill the field and press Enter. One `section-header` contains that text. Stored `segments[0]` is `{ start: 0, end: 8 }`.
 - **Deselect.** Tap wrap padding. Run `page.getByTestId("passage-wrap").click({ position: { x: 8, y: 10 } })`. Zero `.selected` words. Pins hidden. Header still visible.
 - **Tap header.** Tap the header. Run `page.getByTestId("section-header").first().click()`. Selected word ids are exactly `0` through `8`. First/last selected `data-word-id` equal the stored segment `start`/`end`. The header has `aria-current`. Pins and `selection-toolbar` are visible.
 - **Proof.** `drive.mjs header-select` writes `evidence/header-select/cleared.png` after the margin deselect and `evidence/header-select/selected.png` after the header tap, both 390×844.

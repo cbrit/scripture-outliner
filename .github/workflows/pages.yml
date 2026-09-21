@@ -3,8 +3,8 @@ name: Deploy GitHub Pages
 # Project Pages via Actions. Needs a public repo (this token cannot change
 # visibility or enable Pages: REST 403 Resource not accessible by integration).
 # After the repo is public, Settings → Pages → Source = GitHub Actions.
-# Do not target cbrit.github.io root or Whatley sites.
-# Until Project Pages is enabled, the phone URL is the user-site subdirectory:
+# Deploy only the /scripture-outliner/ project path.
+# Until Project Pages is enabled, the phone URL is:
 # https://cbrit.github.io/scripture-outliner/
 on:
   push:

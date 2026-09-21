@@ -533,43 +533,28 @@ button.danger {
   opacity: 0.4;
 }
 
-dialog.summary-dialog {
-  border: 1px solid var(--line);
-  border-radius: 16px;
+.section-header-edit {
+  appearance: none;
+  border: none;
+  background: transparent;
+  resize: none;
+  width: 100%;
+  box-sizing: border-box;
   padding: 0;
-  background: var(--cream);
-  width: min(28rem, calc(100vw - 24px));
-  box-shadow: var(--shadow);
+  outline: none;
+  cursor: text;
+  overflow: hidden;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
-dialog.summary-dialog::backdrop {
-  background: rgba(31, 27, 22, 0.35);
+.section-header.section-header-edit {
+  font-size: max(16px, 1em);
 }
 
-.summary-dialog form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-}
-
-.summary-dialog h2 {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-.summary-dialog textarea {
-  min-height: 8rem;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  padding: 10px;
-  background: var(--paper);
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+.section-header-edit:focus {
+  outline: 1px solid var(--forest);
+  outline-offset: 2px;
 }
 
 .hint {

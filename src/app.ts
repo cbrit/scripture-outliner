@@ -20,8 +20,17 @@ import {
   selectionEquals,
   setSegmentDepth,
   suggestedDepth,
-  updateSegment,
 } from "./segments";
+import {
+  abortSummaryEdit,
+  applySummaryDraft,
+  beginSummaryEdit,
+  overlaySummaryEdit,
+  snapshotSummaryDraft,
+  summaryEditChromeKey,
+  type PassageViewPart,
+  type SummaryEdit,
+} from "./summaryEdit";
 import { clearDocument, loadDocument, loadPrefs, saveDocument, savePrefs } from "./store";
 import {
   DOCX_MIME,
@@ -48,8 +57,6 @@ type Refs = {
   pinEnd: HTMLButtonElement;
   hint: HTMLElement;
   selectionToolbar: HTMLElement;
-  summaryDialog: HTMLDialogElement;
-  summaryField: HTMLTextAreaElement;
 };
 
 type PendingTap =
@@ -71,6 +78,8 @@ export function mount(root: HTMLElement): void {
   let dragging: PinEdge | null = null;
   let pendingTap: PendingTap | null = null;
   let builtKey = "";
+  let summaryEdit: SummaryEdit = abortSummaryEdit();
+  let suppressSummaryCommit = false;
 
   function persist(): void {
     if (doc) {
@@ -94,6 +103,7 @@ export function mount(root: HTMLElement): void {
   function render(opts?: { reveal?: boolean }): void {
     refs.showTextInput.checked = prefs.showText;
     if (!doc) {
+      summaryEdit = abortSummaryEdit();
       refs.importView.hidden = false;
       refs.editor.hidden = true;
       refs.headerActions.hidden = true;
@@ -157,8 +167,15 @@ export function mount(root: HTMLElement): void {
     if (!doc) {
       return;
     }
-    const key = structureKey(doc);
+    // Chrome key omits draft so typing does not remount the field.
+    const key = `${structureKey(doc)}|${summaryEditChromeKey(summaryEdit)}`;
     if (key !== builtKey) {
+      const field = refs.passage.querySelector(
+        "[data-testid='summary-field']",
+      );
+      if (field instanceof HTMLTextAreaElement) {
+        summaryEdit = snapshotSummaryDraft(summaryEdit, field.value);
+      }
       buildPassage();
       builtKey = key;
     }
@@ -214,17 +231,25 @@ export function mount(root: HTMLElement): void {
     if (!doc) {
       return;
     }
-    refs.passage.replaceChildren();
     const current = doc;
     const breaks = breaksForPassage(current.passage);
     const parts = mergeLooseWordParts(
       passageParts(current.passage.words.length, current.segments),
       breaks,
     );
-    for (const part of parts) {
+    const view = overlaySummaryEdit(parts, current.segments, summaryEdit);
+    suppressSummaryCommit = true;
+    refs.passage.replaceChildren();
+    for (const part of view) {
       switch (part.kind) {
         case "header": {
           refs.passage.append(sectionHeader(part.segment));
+          break;
+        }
+        case "summary-editor": {
+          if (summaryEdit.kind === "editing") {
+            refs.passage.append(sectionHeaderEditor(part, summaryEdit));
+          }
           break;
         }
         case "words": {
@@ -246,6 +271,7 @@ export function mount(root: HTMLElement): void {
         }
       }
     }
+    suppressSummaryCommit = false;
   }
 
   function renderActions(): void {
@@ -309,8 +335,14 @@ export function mount(root: HTMLElement): void {
       refs.selectionToolbar.hidden = true;
       return;
     }
+    const field = summaryField();
     const startEl = wordElement(doc.selection.start);
     const endEl = wordElement(doc.selection.end);
+    if (field) {
+      const box = field.getBoundingClientRect();
+      placeToolbar(wrap, box, box, true);
+      return;
+    }
     if (startEl && endEl) {
       placeToolbar(wrap, startEl.getBoundingClientRect(), endEl.getBoundingClientRect());
       return;
@@ -326,7 +358,12 @@ export function mount(root: HTMLElement): void {
     refs.selectionToolbar.hidden = true;
   }
 
-  function placeToolbar(wrap: HTMLElement, startBox: DOMRect, endBox: DOMRect): void {
+  function placeToolbar(
+    wrap: HTMLElement,
+    startBox: DOMRect,
+    endBox: DOMRect,
+    preferBelow = false,
+  ): void {
     refs.selectionToolbar.hidden = false;
     const origin = wrap.getBoundingClientRect();
     const rangeTop = Math.min(startBox.top, endBox.top);
@@ -337,9 +374,12 @@ export function mount(root: HTMLElement): void {
     const pad = 6;
     let top = rangeTop - origin.top - toolbarH - 8;
     let placement = "above";
-    if (top < pad) {
+    if (preferBelow || top < pad) {
       top = rangeBottom - origin.top + 8;
       placement = "below";
+    }
+    if (top < pad) {
+      top = pad;
     }
     const pinCenterX = (startBox.left + startBox.right) / 2 - origin.left;
     // Keep the hint off the start pin and off the following line of words.
@@ -507,6 +547,7 @@ export function mount(root: HTMLElement): void {
       refs.importText.focus();
       return;
     }
+    summaryEdit = abortSummaryEdit();
     extendFrom = null;
     builtKey = "";
     setDoc(createDocument(passage));
@@ -563,39 +604,101 @@ export function mount(root: HTMLElement): void {
     applySegmentDepth(existing.depth - 1);
   }
 
+  function summaryField(): HTMLTextAreaElement | null {
+    const field = refs.passage.querySelector("[data-testid='summary-field']");
+    return field instanceof HTMLTextAreaElement ? field : null;
+  }
+
+  function queueSummaryFieldFocus(): void {
+    requestAnimationFrame(() => {
+      const field = summaryField();
+      if (!field) {
+        return;
+      }
+      field.focus();
+      const end = field.value.length;
+      field.setSelectionRange(end, end);
+      sizeSummaryField(field);
+    });
+  }
+
+  function sectionHeaderEditor(
+    part: Extract<PassageViewPart, { kind: "summary-editor" }>,
+    edit: Extract<SummaryEdit, { kind: "editing" }>,
+  ): HTMLTextAreaElement {
+    const field = document.createElement("textarea");
+    field.className = "section-header section-header-edit";
+    field.dataset.depth = String(part.depth);
+    field.setAttribute("data-testid", "summary-field");
+    field.rows = 1;
+    field.placeholder = "Write a heading for this range…";
+    field.setAttribute("aria-label", "Summary");
+    field.value = edit.draft;
+    field.addEventListener("input", () => {
+      summaryEdit = snapshotSummaryDraft(summaryEdit, field.value);
+      sizeSummaryField(field);
+    });
+    field.addEventListener("keydown", (event) => {
+      switch (event.key) {
+        case "Enter":
+          event.preventDefault();
+          commitSummaryEdit();
+          break;
+        case "Escape":
+          event.preventDefault();
+          cancelSummaryEdit();
+          break;
+        default:
+          break;
+      }
+    });
+    field.addEventListener("blur", () => {
+      if (suppressSummaryCommit) {
+        return;
+      }
+      commitSummaryEdit();
+    });
+    sizeSummaryField(field);
+    return field;
+  }
+
   function openSummary(): void {
     if (!doc || !doc.selection) {
       return;
     }
-    const existing = exactSegment(doc.segments, doc.selection);
-    refs.summaryField.value = existing?.summary ?? "";
-    refs.summaryDialog.showModal();
-    refs.summaryField.focus();
-  }
-
-  function saveSummary(): void {
-    if (!doc || !doc.selection) {
+    if (summaryEdit.kind === "editing") {
+      summaryField()?.focus();
       return;
     }
-    const text = refs.summaryField.value;
     const existing = exactSegment(doc.segments, doc.selection);
-    if (existing) {
-      patchDoc({
-        ...doc,
-        segments: updateSegment(doc.segments, existing.id, { summary: text }),
-      });
-    } else {
-      const depth = suggestedDepth(doc.segments, doc.selection);
-      patchDoc({
-        ...doc,
-        segments: insertSegment(
-          doc.segments,
-          createSegment(doc.selection, depth, text),
-        ),
-      });
+    summaryEdit = beginSummaryEdit(doc.selection, existing);
+    render({ reveal: true });
+    queueSummaryFieldFocus();
+  }
+
+  function commitSummaryEdit(): void {
+    if (!doc || summaryEdit.kind === "idle") {
+      return;
     }
-    refs.summaryDialog.close();
+    const raw = summaryField()?.value ?? summaryEdit.draft;
+    const next = applySummaryDraft(doc, summaryEdit, raw);
+    suppressSummaryCommit = true;
+    summaryEdit = abortSummaryEdit();
+    if (next !== doc) {
+      patchDoc(next);
+    }
     render();
+    suppressSummaryCommit = false;
+  }
+
+  function cancelSummaryEdit(): void {
+    if (summaryEdit.kind === "idle") {
+      return;
+    }
+    suppressSummaryCommit = true;
+    summaryEdit = abortSummaryEdit();
+    render();
+    suppressSummaryCommit = false;
   }
 
   function clearSelection(): void {
@@ -615,6 +718,7 @@ export function mount(root: HTMLElement): void {
     if (!existing) {
       return;
     }
+    summaryEdit = abortSummaryEdit();
     patchDoc({
       ...doc,
       segments: removeSegment(doc.segments, existing.id),
@@ -699,6 +803,7 @@ export function mount(root: HTMLElement): void {
     if (doc?.segments.length && !window.confirm("Replace the current document?")) {
       return;
     }
+    summaryEdit = abortSummaryEdit();
     extendFrom = null;
     builtKey = "";
     refs.importText.value = "";
@@ -750,7 +855,15 @@ export function mount(root: HTMLElement): void {
     }
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && exportMenuOpen()) {
+    if (event.key !== "Escape") {
+      return;
+    }
+    if (summaryEdit.kind === "editing") {
+      event.preventDefault();
+      cancelSummaryEdit();
+      return;
+    }
+    if (exportMenuOpen()) {
       setExportMenuOpen(false);
     }
   });
@@ -873,16 +986,23 @@ export function mount(root: HTMLElement): void {
     deleteSelectedSegment,
   );
 
-  refs.summaryDialog.querySelector("form")?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    saveSummary();
-  });
-  refs.summaryDialog.querySelector("[data-summary-cancel]")?.addEventListener(
-    "click",
+  document.addEventListener(
+    "pointerdown",
     (event) => {
-      event.preventDefault();
-      refs.summaryDialog.close();
+      if (summaryEdit.kind !== "editing") {
+        return;
+      }
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        commitSummaryEdit();
+        return;
+      }
+      if (target.closest("[data-testid='summary-field'], .section-header-edit")) {
+        return;
+      }
+      commitSummaryEdit();
     },
+    true,
   );
 
   refs.paneText.addEventListener("scroll", () => {
@@ -926,8 +1046,6 @@ function bind(root: HTMLElement): Refs {
     pinEnd: requireEl(root, "[data-pin-end]", HTMLButtonElement),
     hint: requireEl(root, "[data-hint]", HTMLElement),
     selectionToolbar: requireEl(root, "[data-selection-toolbar]", HTMLElement),
-    summaryDialog: requireEl(root, "[data-summary-dialog]", HTMLDialogElement),
-    summaryField: requireEl(root, "[data-summary-field]", HTMLTextAreaElement),
   };
 }
 
@@ -987,16 +1105,6 @@ function shellHtml(): string {
           </div>
         </section>
       </main>
-      <dialog class="summary-dialog" data-summary-dialog data-testid="summary-dialog">
-        <form method="dialog">
-          <h2>Summary</h2>
-          <textarea data-summary-field data-testid="summary-field" placeholder="Write a heading for this range…"></textarea>
-          <div class="dialog-actions">
-            <button type="button" class="secondary" data-summary-cancel data-testid="summary-cancel">Cancel</button>
-            <button type="submit" data-summary-save data-testid="summary-save">Save</button>
-          </div>
-        </form>
-      </dialog>
     </div>
   `;
 }
@@ -1010,6 +1118,11 @@ function sectionHeader(segment: Document["segments"][number]): HTMLElement {
   el.setAttribute("data-testid", "section-header");
   el.textContent = segment.summary.trim();
   return el;
+}
+
+function sizeSummaryField(field: HTMLTextAreaElement): void {
+  field.style.height = "auto";
+  field.style.height = `${field.scrollHeight}px`;
 }
 
 /**

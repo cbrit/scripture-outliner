@@ -8,7 +8,7 @@ This directory is the maintained source for verifying user-facing behavior. Read
 - Confirm `.cursor/skills/verify-scripture-outliner/scripts/doctor.sh` prints `OK` for a `127.0.0.1` preview URL.
 - Start from a cleared `scripture-outliner.document.v1` and `scripture-outliner.prefs.v1` (the drive helper does this).
 - Viewport 390×844 unless a recipe says otherwise.
-- Never drive a preview this run did not start. Never drive Whatley sites or `https://cbrit.github.io/` root.
+- Never drive a preview this run did not start. Drive the local preview from `launch.sh`, not a public Pages URL.
 
 ## Driving conventions
 
@@ -41,6 +41,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Word selection and pins](./word-selection.md) covers tap, extend, pin visibility, and margin deselect.
 - [Deselect outside text](./deselect-outside.md) covers tapping empty padding or margins to clear the selection.
 - [Deeper, shallower, and summary](./section-deeper-summary.md) covers marking ranges and writing a heading.
+- [Inline header edit](./inline-header-edit.md) covers typing a heading in the header slot, Enter and tap-away commit, and empty-field rules.
 - [Header tap selects the section](./header-select.md) covers tapping a header to reselect that segment’s word range.
 - [Icon selection toolbar](./icon-toolbar.md) covers icon-only Deeper, Shallower, Summary, and Delete.
 - [Inline outline](./inline-outline.md) covers bold headers in the passage, nested indent, depth ≥ 2, and untinted body text.

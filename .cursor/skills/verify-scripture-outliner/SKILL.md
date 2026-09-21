@@ -72,7 +72,8 @@ Stable handles (prefer `data-testid`):
 | `selection-toolbar` | Icon hint attached to the current selection (Deeper / Shallower / Summary / Delete) |
 | `action-deeper` `action-shallower` `action-summary` `action-delete` | Icon action buttons (`aria-label` only; no text labels). Delete is the X in this group. |
 | *(removed)* `action-section` `action-bar` `action-clear` | Section (H), sticky bar, and Clear are gone. Deeper creates structure on loose text. Margin / outside tap deselects. |
-| `summary-dialog` `summary-field` `summary-save` `summary-cancel` | Summary modal |
+| `summary-field` | Inline heading editor (`textarea` in the header slot). Enter or tap-away commits. Escape discards. |
+| *(removed)* `summary-dialog` `summary-save` `summary-cancel` | The Summary modal is gone. |
 | `export` `export-menu` `export-markdown` `export-docx` `new-document` | Header actions. Export opens a format menu. |
 | `show-text` | Clickable **Show text** label in `.header-actions` (44px min tap height) |
 | `show-text-input` | The checkbox inside that label. Checked by default. |
@@ -97,7 +98,7 @@ Proof standards:
 
 - Exercise the real click/type path. Reloading after Deeper is how persistence is proved, not reading the store module.
 - Capture action and resulting state (empty import → sample loaded; tap → `.selected` + visible pins).
-- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; `scripture-outliner.prefs.v1` after toggling Show text; no `section-header` after Deeper alone; `section-header` nodes after a non-empty Summary save.
+- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; `scripture-outliner.prefs.v1` after toggling Show text; no `section-header` after Deeper alone; `section-header` nodes after a non-empty Summary commit.
 - No mocks. This app has no backend.
 
 Seeded proof from the first skill run: `evidence/import-sample/`.
@@ -127,4 +128,4 @@ All under `.cursor/skills/verify-scripture-outliner/scripts/`:
 
 `scripts/common.sh` is sourced by the shell helpers. `scripts/package.json` pins `playwright-core`. `scripts/node_modules` is local to the skill and gitignored.
 
-Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`, `icon-toolbar`, `show-text`, `export-markdown`, `export-headers-only`, `export-docx`, `header-body-spacing`, `delete-rejoin`.
+Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`, `icon-toolbar`, `show-text`, `export-markdown`, `export-headers-only`, `export-docx`, `header-body-spacing`, `delete-rejoin`, `inline-header-edit`.
