@@ -8,6 +8,7 @@ The passage is the outline. Section summaries render as bold headers above their
 - `nested-indent` shows a depth-1 header on its own line, indented under the parent.
 - `depth-two` shows a depth-2 header indented further than the subsection.
 - `summary-header-only` shows no header after Section/Deeper until a non-empty Summary is saved.
+- `body-untinted` keeps nested body text in the passage color. Only `.selected` fills.
 
 ## How to get to it (user POV)
 
@@ -26,7 +27,8 @@ Preconditions:
 - **Subsection.** Tap word 9 (shrinks the selected section to that word), tap word 24, choose **Deeper**, **Summary** `Green pastures`. A `section-header[data-depth="1"]` sits on its own line with greater left padding than depth 0.
 - **Subsubsection.** Tap word 18, tap word 24, choose **Deeper**, **Summary** `Still waters`. A `section-header[data-depth="2"]` is present. Depths include `"0"`, `"1"`, and `"2"`.
 - **Clear chrome.** Tap the pane margin so pins and the toolbar do not cover headers. Run `page.getByTestId("pane-text").click({ position: { x: 10, y: 10 } })`.
-- **Proof.** `drive.mjs inline-outline` writes `evidence/inline-outline/nested.png` at 390×844 showing the three headers in the passage. Also capture `before.png` after sample load.
+- **Body color.** Words at depths 0, 1, and 2 have no `seg-*` class. Their computed background is transparent and identical. Then tap the depth-2 header so words `18–24` are `.selected` with a non-transparent fill and filled `.gap.selected` spaces. Words `0` and `9` stay unselected and transparent.
+- **Proof.** `drive.mjs inline-outline` writes `evidence/inline-outline/nested.png` at 390×844 showing the three headers with untinted body text, then `nested-selected.png` with the inner range highlighted. Also capture `before.png` after sample load.
 
 ## Gotchas
 

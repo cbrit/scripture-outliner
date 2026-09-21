@@ -330,22 +330,6 @@ export function passageParts(
   return parts;
 }
 
-export function highlightDepthForWord(
-  segments: readonly Segment[],
-  wordId: WordId,
-): number | null {
-  let deepest: number | null = null;
-  for (const segment of segments) {
-    if (wordId < segment.start || wordId > segment.end) {
-      continue;
-    }
-    if (deepest === null || segment.depth > deepest) {
-      deepest = segment.depth;
-    }
-  }
-  return deepest;
-}
-
 export function snippet(
   words: readonly { text: string }[],
   start: WordId,

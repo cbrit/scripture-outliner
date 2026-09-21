@@ -72,7 +72,7 @@ Use device mode at **390×844** (or an actual phone). After `npm run dev`:
 4. Drag the end pin onto **shepherd;** — it snaps to that word, never mid-token.
 5. **Section** (heading icon), then select an inner phrase and **Deeper**. No header yet. The subsection starts on its own indented line.
 6. **Deeper** again on a still-inner range (depth 2). **Summary**, type a sentence, Save. The bold header appears above that range. Empty summaries do not render a header.
-7. Highlights use stacked shades; selection fill stays one continuous bar. There is no Text / Outline / Split toggle.
+7. Body text keeps the passage color at every depth. Only the current selection fills as one continuous bar. There is no Text / Outline / Split toggle.
 8. Reload the tab. Title, nested segments, and summaries return.
 9. **Export** produces a `.md` file with `#` title and `##` / `###` / `####` outline headings.
 

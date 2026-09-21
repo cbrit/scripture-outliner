@@ -23,7 +23,7 @@ Preconditions:
 
 - Sample is loaded (run `import-sample` first or use `drive.mjs word-selection`, which loads the sample).
 - **Single word.** Tap the first word. Run `page.getByTestId("word").first().click()` or `page.locator('[data-word-id="0"]').click()`. Exactly one `.selected` word. `pin-start` and `pin-end` are visible (`hidden` attribute absent). `selection-toolbar` is visible with icon buttons `action-section`, `action-deeper`, `action-shallower`, `action-summary`, and `action-delete`. There is no `action-bar` and no `action-clear`. `selection-hint` is hidden.
-- **Extend.** Tap a later word. Run `page.getByTestId("word").nth(4).click()`. At least two `.selected` words, still inclusive of the first tap. Pins remain visible. Spaces between those words have class `gap selected` so the highlight reads as one bar, not chips.
+- **Extend.** Tap a later word. Run `page.getByTestId("word").nth(4).click()`. At least two `.selected` words, still inclusive of the first tap. Pins remain visible. Spaces between those words have class `gap selected` so the highlight reads as one bar, not chips. Unselected words keep a transparent background. No `seg-*` classes.
 - **Deselect.** Tap the pane margin. Run `page.getByTestId("pane-text").click({ position: { x: 10, y: 10 } })`. Zero `.selected` words. Pins hidden. `selection-hint` visible again.
 - **Proof.** `drive.mjs word-selection` writes `evidence/word-selection/range.png` and `range.aria.txt` after the extended range exists.
 

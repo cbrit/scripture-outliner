@@ -1,7 +1,7 @@
 title: Scripture Outliner
 url: http://127.0.0.1:4173/
 h1: Scripture Outliner
-extra: {"selected":5,"filledGaps":4}
+extra: {"selected":5,"selectionPaint":[{"id":0,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":1,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":2,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":3,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":4,"backgroundColor":"rgb(243, 217, 138)","selected":true}],"outside":[{"id":10,"backgroundColor":"rgba(0, 0, 0, 0)","selected":false}]}
 ---
 SCRIPTURE OUTLINER
 Export
