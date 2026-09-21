@@ -22,12 +22,21 @@ import {
   updateSegment,
 } from "./segments";
 import { clearDocument, loadDocument, loadPrefs, saveDocument, savePrefs } from "./store";
-import { exportOutlineMarkdown, outlineFilename } from "./exportMarkdown";
+import {
+  DOCX_MIME,
+  exportBlocks,
+  outlineFilename,
+  renderDocx,
+  renderMarkdown,
+  type ExportFormat,
+} from "./exportDocument";
 
 type Refs = {
   titleInput: HTMLInputElement;
   headerActions: HTMLElement;
   showTextInput: HTMLInputElement;
+  exportButton: HTMLButtonElement;
+  exportMenu: HTMLElement;
   importView: HTMLElement;
   importText: HTMLTextAreaElement;
   editor: HTMLElement;
@@ -87,6 +96,7 @@ export function mount(root: HTMLElement): void {
       refs.importView.hidden = false;
       refs.editor.hidden = true;
       refs.headerActions.hidden = true;
+      setExportMenuOpen(false);
       refs.titleInput.value = "";
       refs.titleInput.disabled = true;
       refs.titleInput.hidden = true;
@@ -608,19 +618,77 @@ export function mount(root: HTMLElement): void {
     render();
   }
 
-  function exportOutline(): void {
+  function exportMenuOpen(): boolean {
+    return !refs.exportMenu.hidden;
+  }
+
+  function setExportMenuOpen(open: boolean): void {
+    refs.exportMenu.hidden = !open;
+    refs.exportButton.setAttribute("aria-expanded", open ? "true" : "false");
+    if (!open) {
+      refs.exportMenu.style.left = "";
+      return;
+    }
+    refs.exportMenu.style.left = "0px";
+    const pad = 8;
+    const box = refs.exportMenu.getBoundingClientRect();
+    let left = 0;
+    if (box.right > window.innerWidth - pad) {
+      left -= box.right - (window.innerWidth - pad);
+    }
+    if (box.left + left < pad) {
+      left += pad - (box.left + left);
+    }
+    refs.exportMenu.style.left = `${left}px`;
+  }
+
+  function toggleExportMenu(): void {
     if (!doc) {
       return;
     }
-    const markdown = exportOutlineMarkdown(doc);
-    const blob = new Blob([markdown], { type: "text/markdown" });
+    setExportMenuOpen(!exportMenuOpen());
+  }
+
+  function downloadBlob(blob: Blob, filename: string): void {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = outlineFilename(doc.passage.title);
+    link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
-    void navigator.clipboard?.writeText(markdown).catch(() => undefined);
+  }
+
+  function bytesToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+    const copy = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(copy).set(bytes);
+    return copy;
+  }
+
+  function exportAs(format: ExportFormat): void {
+    if (!doc) {
+      return;
+    }
+    const includeBody = prefs.showText;
+    const blocks = exportBlocks(doc, includeBody);
+    const filename = outlineFilename(doc.passage.title, format);
+    switch (format) {
+      case "md": {
+        const markdown = renderMarkdown(blocks);
+        downloadBlob(new Blob([markdown], { type: "text/markdown" }), filename);
+        void navigator.clipboard?.writeText(markdown).catch(() => undefined);
+        break;
+      }
+      case "docx": {
+        const bytes = renderDocx(blocks);
+        downloadBlob(new Blob([bytesToArrayBuffer(bytes)], { type: DOCX_MIME }), filename);
+        break;
+      }
+      default: {
+        const _exhaustive: never = format;
+        assertNever(_exhaustive);
+      }
+    }
+    setExportMenuOpen(false);
   }
 
   function newDocument(): void {
@@ -653,7 +721,35 @@ export function mount(root: HTMLElement): void {
       passage: { ...doc.passage, title: refs.titleInput.value },
     });
   });
-  root.querySelector("[data-export]")?.addEventListener("click", exportOutline);
+  refs.exportButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleExportMenu();
+  });
+  refs.exportMenu.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    const item = target.closest("[data-export-format]");
+    if (!(item instanceof HTMLElement)) {
+      return;
+    }
+    const format = parseExportFormat(item.dataset.exportFormat);
+    if (format) {
+      exportAs(format);
+    }
+  });
+  document.addEventListener("click", () => {
+    if (exportMenuOpen()) {
+      setExportMenuOpen(false);
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && exportMenuOpen()) {
+      setExportMenuOpen(false);
+    }
+  });
   root.querySelector("[data-new]")?.addEventListener("click", newDocument);
   refs.showTextInput.addEventListener("change", () => {
     prefs = { showText: refs.showTextInput.checked };
@@ -814,6 +910,8 @@ function bind(root: HTMLElement): Refs {
     titleInput: requireEl(root, ".title-input", HTMLInputElement),
     headerActions: requireEl(root, ".header-actions", HTMLElement),
     showTextInput: requireEl(root, "[data-testid='show-text-input']", HTMLInputElement),
+    exportButton: requireEl(root, "[data-export]", HTMLButtonElement),
+    exportMenu: requireEl(root, "[data-export-menu]", HTMLElement),
     importView: requireEl(root, "[data-import]", HTMLElement),
     importText: requireEl(root, "[data-import-text]", HTMLTextAreaElement),
     editor: requireEl(root, "[data-editor]", HTMLElement),
@@ -842,7 +940,13 @@ function shellHtml(): string {
             <input type="checkbox" checked data-testid="show-text-input" />
             Show text
           </label>
-          <button type="button" class="secondary" data-export data-testid="export">Export</button>
+          <div class="export-control" data-export-control>
+            <button type="button" class="secondary" data-export data-testid="export" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu">Export</button>
+            <div id="export-menu" class="export-menu" role="menu" hidden data-export-menu data-testid="export-menu">
+              <button type="button" role="menuitem" data-export-format="md" data-testid="export-markdown">Markdown (.md)</button>
+              <button type="button" role="menuitem" data-export-format="docx" data-testid="export-docx">Word (.docx)</button>
+            </div>
+          </div>
           <button type="button" class="ghost" data-new data-testid="new-document">New</button>
         </div>
       </header>
@@ -1031,6 +1135,17 @@ function requireEl<T extends HTMLElement>(
     throw new Error(`Missing ${selector}`);
   }
   return el;
+}
+
+function parseExportFormat(value: string | undefined): ExportFormat | null {
+  switch (value) {
+    case "md":
+      return "md";
+    case "docx":
+      return "docx";
+    default:
+      return null;
+  }
 }
 
 function clamp(value: number, min: number, max: number): number {

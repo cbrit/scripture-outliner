@@ -1,0 +1,21 @@
+{
+  "feature": "export-markdown",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "before": {
+      "png": "evidence/export-markdown/export-menu-open.png",
+      "aria": "evidence/export-markdown/export-menu-open.aria.txt"
+    },
+    "after": {
+      "png": "evidence/export-markdown/after-download.png",
+      "aria": "evidence/export-markdown/after-download.aria.txt"
+    },
+    "suggested": "sample.md",
+    "bytes": 632
+  },
+  "at": "2026-09-21T02:20:36.557Z"
+}

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "test": "node --experimental-strip-types --test src/exportDocument.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

@@ -3,7 +3,7 @@
  * Drive Scripture Outliner in Chrome via Playwright against the launched preview.
  *
  * Usage: node drive.mjs <feature-id>
- * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar | show-text
+ * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar | show-text | export-markdown | export-headers-only | export-docx
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -271,14 +271,11 @@ async function assertSelectionFill(page, startId, endId) {
   return paints;
 }
 
-async function driveImportSample(page) {
+async function loadSamplePassage(page) {
   const importView = page.getByTestId("import-view");
   if (!(await importView.isVisible())) {
     throw new Error("Import view is not visible on a fresh session");
   }
-  const before = await snapshot(page, path.join(evidenceRoot, "import-sample"), "empty", {
-    step: "empty-import",
-  });
   await page.getByTestId("load-sample").click();
   await page.getByTestId("passage").waitFor({ state: "visible" });
   const words = page.getByTestId("word");
@@ -295,12 +292,20 @@ async function driveImportSample(page) {
   if (firstWord !== "The") {
     throw new Error(`Expected first sample word "The", got ${JSON.stringify(firstWord)}`);
   }
+  return { wordCount, title };
+}
+
+async function driveImportSample(page) {
+  const before = await snapshot(page, path.join(evidenceRoot, "import-sample"), "empty", {
+    step: "empty-import",
+  });
+  const loaded = await loadSamplePassage(page);
   const after = await snapshot(page, path.join(evidenceRoot, "import-sample"), "sample-loaded", {
     step: "sample-loaded",
-    wordCount,
-    title,
+    wordCount: loaded.wordCount,
+    title: loaded.title,
   });
-  return { wordCount, title, before, after };
+  return { ...loaded, before, after };
 }
 
 async function tapWrapPadding(page) {
@@ -428,6 +433,158 @@ async function waitForExactSegment(page) {
     const del = document.querySelector('[data-testid="action-delete"]');
     return del instanceof HTMLButtonElement && !del.disabled;
   });
+}
+
+async function setupOutlinedSample(page) {
+  await loadSamplePassage(page);
+  await clickWordId(page, 0);
+  await clickWordId(page, 8);
+  await page.getByTestId("action-deeper").click();
+  await waitForExactSegment(page);
+  await saveSummary(page, "The LORD is shepherd");
+  await page.getByTestId("section-header").first().waitFor();
+  await deselectByMargin(page);
+}
+
+async function hideBodyText(page) {
+  const checkbox = page.getByTestId("show-text-input");
+  if ((await checkbox.count()) > 0) {
+    if (await checkbox.isChecked()) {
+      await checkbox.uncheck();
+    }
+    if (await checkbox.isChecked()) {
+      throw new Error("Show text should be unchecked before headers-only export");
+    }
+    return "show-text-input";
+  }
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "scripture-outliner.prefs.v1",
+      JSON.stringify({ showText: false }),
+    );
+  });
+  await page.reload({ waitUntil: "networkidle" });
+  await page.getByTestId("editor").waitFor({ state: "visible" });
+  await page.getByTestId("passage").waitFor({ state: "visible" });
+  return "prefs-shim";
+}
+
+async function openExportMenu(page) {
+  await page.getByTestId("export").click();
+  const menu = page.getByTestId("export-menu");
+  await menu.waitFor({ state: "visible" });
+  const md = page.getByTestId("export-markdown");
+  const docx = page.getByTestId("export-docx");
+  if (!(await md.isVisible()) || !(await docx.isVisible())) {
+    throw new Error("Export menu is missing Markdown or Word items");
+  }
+  if ((await page.getByTestId("export-pages").count()) !== 0) {
+    throw new Error("Apple Pages must not appear in the export menu");
+  }
+  const mdBox = await md.boundingBox();
+  if (!mdBox || mdBox.height < 44) {
+    throw new Error(`export-markdown tap target is ${mdBox?.width}x${mdBox?.height}, expected height >= 44`);
+  }
+  const menuBox = await menu.boundingBox();
+  if (!menuBox) {
+    throw new Error("Export menu has no bounding box");
+  }
+  if (menuBox.x < -1 || menuBox.x + menuBox.width > viewport.width + 1) {
+    throw new Error(
+      `Export menu clipped at 390px: x=${menuBox.x} w=${menuBox.width}`,
+    );
+  }
+  return menu;
+}
+
+async function driveExportMarkdown(page) {
+  await setupOutlinedSample(page);
+  await openExportMenu(page);
+  const before = await snapshot(page, path.join(evidenceRoot, "export-markdown"), "export-menu-open", {
+    step: "export-menu-open",
+  });
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("export-markdown").click();
+  const download = await downloadPromise;
+  const suggested = download.suggestedFilename();
+  if (!suggested.endsWith(".md")) {
+    throw new Error(`Expected .md download, got ${suggested}`);
+  }
+  const dest = path.join(evidenceRoot, "export-markdown", "outline.md");
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  await download.saveAs(dest);
+  const text = fs.readFileSync(dest, "utf8");
+  if (!text.includes("# Sample")) {
+    throw new Error(`Markdown missing title, got ${JSON.stringify(text.slice(0, 200))}`);
+  }
+  if (!text.includes("## The LORD is shepherd")) {
+    throw new Error(`Markdown missing heading, got ${JSON.stringify(text.slice(0, 400))}`);
+  }
+  if (!text.includes("I shall not want")) {
+    throw new Error("Markdown with text shown should include body");
+  }
+  const after = await snapshot(page, path.join(evidenceRoot, "export-markdown"), "after-download", {
+    step: "markdown-downloaded",
+    suggested,
+  });
+  return { before, after, suggested, bytes: text.length };
+}
+
+async function driveExportHeadersOnly(page) {
+  await setupOutlinedSample(page);
+  const hideHow = await hideBodyText(page);
+  await openExportMenu(page);
+  const before = await snapshot(page, path.join(evidenceRoot, "export-headers-only"), "export-menu-open", {
+    step: "headers-only-menu",
+    hideHow,
+  });
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("export-markdown").click();
+  const download = await downloadPromise;
+  const dest = path.join(evidenceRoot, "export-headers-only", "outline.md");
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  await download.saveAs(dest);
+  const text = fs.readFileSync(dest, "utf8");
+  if (!text.includes("# Sample")) {
+    throw new Error(`Headers-only missing title: ${JSON.stringify(text.slice(0, 200))}`);
+  }
+  if (!text.includes("## The LORD is shepherd")) {
+    throw new Error(`Headers-only missing heading: ${JSON.stringify(text.slice(0, 400))}`);
+  }
+  if (text.includes("I shall not want")) {
+    throw new Error("Headers-only export leaked body text");
+  }
+  const after = await snapshot(page, path.join(evidenceRoot, "export-headers-only"), "after-download", {
+    step: "headers-only-downloaded",
+    hideHow,
+  });
+  return { before, after, hideHow, text };
+}
+
+async function driveExportDocx(page) {
+  await setupOutlinedSample(page);
+  await openExportMenu(page);
+  await snapshot(page, path.join(evidenceRoot, "export-docx"), "export-menu-open", {
+    step: "docx-menu-open",
+  });
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("export-docx").click();
+  const download = await downloadPromise;
+  const suggested = download.suggestedFilename();
+  if (!suggested.endsWith(".docx")) {
+    throw new Error(`Expected .docx download, got ${suggested}`);
+  }
+  const dest = path.join(evidenceRoot, "export-docx", "outline.docx");
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  await download.saveAs(dest);
+  const buf = fs.readFileSync(dest);
+  if (buf.length <= 200) {
+    throw new Error(`Docx too small: ${buf.length}`);
+  }
+  if (buf[0] !== 0x50 || buf[1] !== 0x4b) {
+    throw new Error("Docx did not start with PK zip magic");
+  }
+  return { suggested, bytes: buf.length, magic: "PK" };
 }
 
 async function driveSectionDeeperSummary(page) {
@@ -905,6 +1062,9 @@ const drivers = {
   "header-select": driveHeaderSelect,
   "icon-toolbar": driveIconToolbar,
   "show-text": driveShowText,
+  "export-markdown": driveExportMarkdown,
+  "export-headers-only": driveExportHeadersOnly,
+  "export-docx": driveExportDocx,
 };
 
 ensurePlaywright();

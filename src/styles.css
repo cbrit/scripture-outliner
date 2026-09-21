@@ -172,6 +172,41 @@ button.danger {
   flex-shrink: 0;
 }
 
+.export-control {
+  position: relative;
+}
+
+.export-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: auto;
+  z-index: 12;
+  min-width: 220px;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 4px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.export-menu button {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 12px;
+  text-align: left;
+  background: transparent;
+  color: var(--ink);
+  border-radius: 8px;
+}
+
+.export-menu button:active {
+  background: var(--paper-2);
+}
+
 .main {
   flex: 1;
   display: flex;

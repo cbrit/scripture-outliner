@@ -34,6 +34,6 @@ Preconditions:
 - Hiding is omission in `buildPassage()`, not CSS `display:none` on still-present `.word` nodes. Assert `data-testid="word"` count is 0, not that words are invisible.
 - Storage key is `scripture-outliner.prefs.v1`. It is separate from `scripture-outliner.document.v1`. **New** must not clear it. Drive must clear it so leftover off-state does not break other recipes.
 - There is no Text / Outline / Split three-way toggle and no separate outline pane. This control is only **Show text**.
-- Export does not follow this pref yet. Do not assert that Markdown omits body.
+- Export follows this pref: off writes headers only, on writes headers plus body. See [export-headers-only](./export-headers-only.md).
 - Header tap still sets `doc.selection` to that segment start/end. Toolbar placement uses the header box only when words are absent.
 - `viewMode` is not a document field. Do not write it.
