@@ -271,6 +271,10 @@ export function mount(root: HTMLElement): void {
         }
       }
     }
+    const mounted = summaryField();
+    if (mounted) {
+      sizeSummaryField(mounted);
+    }
     suppressSummaryCommit = false;
   }
 
@@ -619,6 +623,8 @@ export function mount(root: HTMLElement): void {
       const end = field.value.length;
       field.setSelectionRange(end, end);
       sizeSummaryField(field);
+      positionPins();
+      positionToolbar();
     });
   }
 
@@ -637,6 +643,7 @@ export function mount(root: HTMLElement): void {
     field.addEventListener("input", () => {
       summaryEdit = snapshotSummaryDraft(summaryEdit, field.value);
       sizeSummaryField(field);
+      positionToolbar();
     });
     field.addEventListener("keydown", (event) => {
       switch (event.key) {
@@ -658,7 +665,6 @@ export function mount(root: HTMLElement): void {
       }
       commitSummaryEdit();
     });
-    sizeSummaryField(field);
     return field;
   }
 
