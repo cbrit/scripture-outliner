@@ -1,6 +1,6 @@
 ---
 name: verify-scripture-outliner
-description: Drive the Scripture Outliner Vite PWA in a real browser (Playwright + Chrome against `vite preview` at 390×844). Use when proving import, word selection, pins, inline headers, nested outline depth, summaries, Show text, or localStorage persistence.
+description: Drive the Scripture Outliner Vite PWA in a real browser (Playwright + Chrome against `vite preview` at 390×844). Use when proving import, word selection, pins, inline headers, nested outline depth, summaries, Show text, export (Markdown/Word), or localStorage persistence.
 ---
 
 # Verify Scripture Outliner
@@ -73,7 +73,7 @@ Stable handles (prefer `data-testid`):
 | `action-deeper` `action-shallower` `action-summary` `action-delete` | Icon action buttons (`aria-label` only; no text labels). Delete is the X in this group. |
 | *(removed)* `action-section` `action-bar` `action-clear` | Section (H), sticky bar, and Clear are gone. Deeper creates structure on loose text. Margin / outside tap deselects. |
 | `summary-dialog` `summary-field` `summary-save` `summary-cancel` | Summary modal |
-| `export` `new-document` | Header actions |
+| `export` `export-menu` `export-markdown` `export-docx` `new-document` | Header actions. Export opens a format menu. |
 | `show-text` | Clickable **Show text** label in `.header-actions` (44px min tap height) |
 | `show-text-input` | The checkbox inside that label. Checked by default. |
 
@@ -102,7 +102,7 @@ Proof standards:
 
 Seeded proof from the first skill run: `evidence/import-sample/`.
 
-**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone. Inline-outline PRs must show (1) a bold section header in the passage, (2) a nested indented subsection, and (3) depth ≥ 2 when practical. Nested body text must share the passage color. Only `.selected` may tint words. Icon-toolbar PRs must show the icon hint including the Delete X, without a Section (H) button. Show-text PRs must include 390×844 screenshots with (a) toggle on and body visible and (b) toggle off and headers only.
+**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone. Inline-outline PRs must show (1) a bold section header in the passage, (2) a nested indented subsection, and (3) depth ≥ 2 when practical. Nested body text must share the passage color. Only `.selected` may tint words. Icon-toolbar PRs must show the icon hint including the Delete X, without a Section (H) button. Show-text PRs must include 390×844 screenshots with (a) toggle on and body visible and (b) toggle off and headers only. Export PRs must include the format menu at 390×844 plus Markdown with text on, Markdown headers-only with text off, and a `.docx` download smoke.
 
 ## Cleanup
 
@@ -127,4 +127,4 @@ All under `.cursor/skills/verify-scripture-outliner/scripts/`:
 
 `scripts/common.sh` is sourced by the shell helpers. `scripts/package.json` pins `playwright-core`. `scripts/node_modules` is local to the skill and gitignored.
 
-Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`, `icon-toolbar`, `show-text`.
+Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`, `icon-toolbar`, `show-text`, `export-markdown`, `export-headers-only`, `export-docx`.

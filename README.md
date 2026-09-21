@@ -61,7 +61,7 @@ Install and the service worker require a secure context: `localhost` or HTTPS.
 3. The selection toolbar is icon-only: **Deeper**, **Shallower**, **Summary**, and **Delete** (X). **Deeper** creates a range on loose text (depth 0 with no parent) and nests an inner range. **Shallower** outdents when the selection matches a nested segment. **Summary** writes the bold header. A header appears only after a non-empty Summary. Tap the margin to drop the selection.
 4. Headers sit in the passage above their body. Nested ranges start on a new line and indent by depth.
 5. **Show text** (header checkbox, default on) hides or shows body words. It is an app pref in `scripture-outliner.prefs.v1`, not a document field. **New** keeps this setting.
-6. Reload: the current document is restored from `localStorage`. **Export** downloads Markdown with ATX headers by depth (and copies it when the clipboard is available).
+6. Reload: the current document is restored from `localStorage`. **Export** opens a menu. Markdown downloads `.md` with the same headers and body the screen shows. Word downloads `.docx`. If body text is hidden, export writes headers only.
 
 ## Manual QA (~390px viewport)
 
@@ -76,7 +76,7 @@ Use device mode at **390×844** (or an actual phone). After `npm run dev`:
 7. Body text keeps the passage color at every depth. Only the current selection fills as one continuous bar. There is no Text / Outline / Split toggle.
 8. Uncheck **Show text**. Body words are gone. Headers and indent remain. Reload keeps the off state from `scripture-outliner.prefs.v1`. Check it again to restore words.
 9. Reload the tab. Title, nested segments, and summaries return.
-10. **Export** produces a `.md` file with `#` title and `##` / `###` / `####` outline headings.
+10. **Export** opens a menu. **Markdown (.md)** writes `#` title and `##` / `###` / `####` headings plus body text when text is shown. **Word (.docx)** writes the same structure. Headers-only (text hidden) omits body text and does not invent headings for empty summaries.
 
 Secondary: tap the margin (or empty space around the passage) to drop the selection. **Delete** (X on the selection toolbar) removes the segment that exactly matches the selection. **New** returns to import. There is no Clear button.
 
