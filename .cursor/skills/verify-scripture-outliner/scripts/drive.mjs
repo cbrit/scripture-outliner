@@ -1295,6 +1295,7 @@ async function driveInlineHeaderEdit(page) {
       `Field vs header slot drifted dx=${slotDx.toFixed(2)} dy=${slotDy.toFixed(2)}`,
     );
   }
+  await deselectByMargin(page);
   const newCommitted = await snapshot(page, dir, "new-committed", {
     step: "new-header-committed",
     headerBox,
@@ -1318,8 +1319,6 @@ async function driveInlineHeaderEdit(page) {
   await editField.press("Enter");
   await editField.waitFor({ state: "hidden" });
 
-  await page.getByTestId("section-header").first().click();
-  await waitForExactSegment(page);
   await page.getByTestId("action-summary").click();
   const tapField = page.getByTestId("summary-field");
   await tapField.waitFor({ state: "visible" });
