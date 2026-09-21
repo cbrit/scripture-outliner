@@ -1,10 +1,10 @@
 # Icon selection toolbar
 
-With a selection, actions are icon-only buttons on the attached toolbar: Section, Deeper, Shallower, Summary, and Delete (X). There is no sticky bottom bar and no Clear button.
+With a selection, actions are icon-only buttons on the attached toolbar: Deeper, Shallower, Summary, and Delete (X). There is no Section (H) button, sticky bottom bar, or Clear button.
 
 ## Sub-features
 
-- `toolbar-icons` shows SVG icons, not text labels, for the five actions.
+- `toolbar-icons` shows SVG icons, not text labels, for the four actions.
 - `toolbar-delete` places Delete (X) in `selection-toolbar` as `action-delete`.
 - `toolbar-targets` keeps each action at least 44×44 CSS pixels.
 - `toolbar-a11y` exposes `aria-label` (and `title`) on each icon button.
@@ -22,9 +22,9 @@ Preconditions:
 
 - Sample loaded. Word id `0` is `The`.
 
-- **Icons.** Tap word 0. Run `page.locator('[data-word-id="0"]').click()`. `selection-toolbar` is visible. Buttons `action-section`, `action-deeper`, `action-shallower`, `action-summary`, and `action-delete` are inside it, each with an `svg`, empty inner text, a 44px tap target, and `aria-label` Section / Deeper / Shallower / Summary / Delete.
-- **Removed chrome.** `action-clear` and `action-bar` are absent from the DOM.
-- **Proof.** `drive.mjs icon-toolbar` writes `evidence/icon-toolbar/toolbar.png` at 390×844 with the icon toolbar (including X) and the heading `Scripture Outliner` visible.
+- **Icons.** Tap word 0. Run `page.locator('[data-word-id="0"]').click()`. `selection-toolbar` is visible. Buttons `action-deeper`, `action-shallower`, `action-summary`, and `action-delete` are inside it, each with an `svg`, empty inner text, a 44px tap target, and `aria-label` Deeper / Shallower / Summary / Delete. `action-section` is absent.
+- **Removed chrome.** `action-section`, `action-clear`, and `action-bar` are absent from the DOM.
+- **Proof.** `drive.mjs icon-toolbar` writes `evidence/icon-toolbar/toolbar.png` at 390×844 with the icon toolbar (including X, without H/Section) and the heading `Scripture Outliner` visible.
 
 ## Gotchas
 

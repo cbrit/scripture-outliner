@@ -103,7 +103,6 @@ async function snapshot(page, dir, name, extra) {
 }
 
 const TOOLBAR_ACTIONS = [
-  { id: "action-section", label: "Section" },
   { id: "action-deeper", label: "Deeper" },
   { id: "action-shallower", label: "Shallower" },
   { id: "action-summary", label: "Summary" },
@@ -143,6 +142,9 @@ async function assertIconToolbar(page) {
         `${action.id} tap target is ${box?.width}x${box?.height}, expected >= 44`,
       );
     }
+  }
+  if ((await page.getByTestId("action-section").count()) !== 0) {
+    throw new Error("action-section should be removed");
   }
   if ((await page.getByTestId("action-clear").count()) !== 0) {
     throw new Error("action-clear should be removed");
@@ -341,15 +343,15 @@ async function driveDeselectOutside(page) {
   });
   await clickWordId(page, 0);
   await clickWordId(page, 6);
-  await page.getByTestId("action-section").click();
+  await page.getByTestId("action-deeper").click();
   await waitForExactSegment(page);
   if ((await page.getByTestId("section-header").count()) !== 0) {
-    throw new Error("Section must not show a header before Summary");
+    throw new Error("Deeper must not show a header before Summary");
   }
   await saveSummary(page, "Shepherd");
   await page.getByTestId("section-header").first().waitFor();
-  const headersAfterSection = await page.getByTestId("section-header").count();
-  if (headersAfterSection < 1) {
+  const headersAfterDeeper = await page.getByTestId("section-header").count();
+  if (headersAfterDeeper < 1) {
     throw new Error("Summary did not create a header");
   }
   await clickWordId(page, 0);
@@ -357,9 +359,9 @@ async function driveDeselectOutside(page) {
   await tapWrapPadding(page);
   const headersAfterDeselect = await page.getByTestId("section-header").count();
   const selectedAfterKeep = await page.locator('[data-testid="word"].selected').count();
-  if (headersAfterDeselect !== headersAfterSection) {
+  if (headersAfterDeselect !== headersAfterDeeper) {
     throw new Error(
-      `Margin tap deleted segments (headers ${headersAfterSection} → ${headersAfterDeselect})`,
+      `Margin tap deleted segments (headers ${headersAfterDeeper} → ${headersAfterDeselect})`,
     );
   }
   if (selectedAfterKeep !== 0) {
@@ -377,7 +379,7 @@ async function driveDeselectOutside(page) {
   return {
     selectedBefore,
     selectedAfter,
-    headersAfterSection,
+    headersAfterDeeper,
     headersAfterDeselect,
     reselected,
     before,
@@ -429,25 +431,28 @@ async function driveSectionDeeperSummary(page) {
   await driveImportSample(page);
   await page.getByTestId("word").nth(1).click();
   await page.getByTestId("word").nth(6).click();
-  await page.getByTestId("action-section").click();
-  await waitForExactSegment(page);
-  const afterSectionCount = await page.getByTestId("section-header").count();
-  if (afterSectionCount !== 0) {
-    throw new Error(`Section must not show a header, got ${afterSectionCount}`);
-  }
-  const afterSection = await snapshot(
-    page,
-    path.join(evidenceRoot, "section-deeper-summary"),
-    "after-section",
-    { step: "section-no-header", headers: afterSectionCount },
-  );
-  await page.getByTestId("word").nth(3).click();
-  await page.getByTestId("word").nth(5).click();
   await page.getByTestId("action-deeper").click();
   await waitForExactSegment(page);
   const afterDeeperCount = await page.getByTestId("section-header").count();
   if (afterDeeperCount !== 0) {
     throw new Error(`Deeper must not show a header, got ${afterDeeperCount}`);
+  }
+  const afterDeeper = await snapshot(
+    page,
+    path.join(evidenceRoot, "section-deeper-summary"),
+    "after-deeper",
+    { step: "deeper-no-header", headers: afterDeeperCount },
+  );
+  await page.getByTestId("word").nth(3).click();
+  await page.getByTestId("word").nth(5).click();
+  await page.getByTestId("action-deeper").click();
+  await waitForExactSegment(page);
+  const afterNestedCount = await page.getByTestId("section-header").count();
+  if (afterNestedCount !== 0) {
+    throw new Error(`Nested Deeper must not show a header, got ${afterNestedCount}`);
+  }
+  if (await page.getByTestId("action-shallower").isDisabled()) {
+    throw new Error("Shallower should be enabled on a nested segment");
   }
   await saveSummary(page, "Shepherd care");
   await page.getByTestId("section-header").first().waitFor();
@@ -474,7 +479,17 @@ async function driveSectionDeeperSummary(page) {
     "after-summary",
     { depths, summaries },
   );
-  return { depths, summaries, afterSection, afterSummary };
+  await page.getByTestId("section-header").first().click();
+  await waitForExactSegment(page);
+  await page.getByTestId("action-shallower").click();
+  const shallowerDepth = await page
+    .getByTestId("section-header")
+    .first()
+    .getAttribute("data-depth");
+  if (shallowerDepth !== "0") {
+    throw new Error(`Shallower should outdent to depth 0, got ${JSON.stringify(shallowerDepth)}`);
+  }
+  return { depths, summaries, afterDeeper, afterSummary, shallowerDepth };
 }
 
 async function driveInlineOutline(page) {
@@ -484,10 +499,10 @@ async function driveInlineOutline(page) {
   });
   await clickWordId(page, 0);
   await clickWordId(page, 24);
-  await page.getByTestId("action-section").click();
+  await page.getByTestId("action-deeper").click();
   await waitForExactSegment(page);
   if ((await page.getByTestId("section-header").count()) !== 0) {
-    throw new Error("Section must not show a header before Summary");
+    throw new Error("Deeper must not show a header before Summary");
   }
   await saveSummary(page, "The LORD is shepherd");
   await page.locator('[data-testid="section-header"][data-depth="0"]').waitFor();
@@ -599,10 +614,10 @@ async function driveHeaderSelect(page) {
   await driveImportSample(page);
   await clickWordId(page, 0);
   await clickWordId(page, 8);
-  await page.getByTestId("action-section").click();
+  await page.getByTestId("action-deeper").click();
   await waitForExactSegment(page);
   if ((await page.getByTestId("section-header").count()) !== 0) {
-    throw new Error("Section must not show a header before Summary");
+    throw new Error("Deeper must not show a header before Summary");
   }
   await saveSummary(page, "The LORD is shepherd");
   await page.getByTestId("section-header").first().waitFor();
@@ -672,14 +687,14 @@ async function driveHeaderSelect(page) {
 async function drivePersistence(page) {
   await driveImportSample(page);
   await page.getByTestId("word").nth(1).click();
-  await page.getByTestId("action-section").click();
+  await page.getByTestId("action-deeper").click();
   await waitForExactSegment(page);
   if ((await page.getByTestId("section-header").count()) !== 0) {
-    throw new Error("Section must not show a header before Summary");
+    throw new Error("Deeper must not show a header before Summary");
   }
   const stored = await page.evaluate(() => localStorage.getItem("scripture-outliner.document.v1"));
   if (!stored) {
-    throw new Error("localStorage key scripture-outliner.document.v1 was empty after Section");
+    throw new Error("localStorage key scripture-outliner.document.v1 was empty after Deeper");
   }
   const parsed = JSON.parse(stored);
   if (!Array.isArray(parsed.segments) || parsed.segments.length < 1) {

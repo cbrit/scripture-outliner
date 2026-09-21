@@ -40,8 +40,8 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Import and sample](./import-sample.md) covers paste import and the built-in sample.
 - [Word selection and pins](./word-selection.md) covers tap, extend, pin visibility, and margin deselect.
 - [Deselect outside text](./deselect-outside.md) covers tapping empty padding or margins to clear the selection.
-- [Section, deeper, and summary](./section-deeper-summary.md) covers marking ranges and writing a heading.
+- [Deeper, shallower, and summary](./section-deeper-summary.md) covers marking ranges and writing a heading.
 - [Header tap selects the section](./header-select.md) covers tapping a header to reselect that segment’s word range.
-- [Icon selection toolbar](./icon-toolbar.md) covers icon-only Section / Deeper / Shallower / Summary / Delete.
+- [Icon selection toolbar](./icon-toolbar.md) covers icon-only Deeper, Shallower, Summary, and Delete.
 - [Inline outline](./inline-outline.md) covers bold headers in the passage, nested indent, depth ≥ 2, and untinted body text.
 - [Persistence](./persistence.md) covers `localStorage` restore after reload.
