@@ -4,6 +4,7 @@ h1: Scripture Outliner
 extra: {"step":"sample-loaded","wordCount":118,"title":"Sample"}
 ---
 SCRIPTURE OUTLINER
+Show text
 Export
 New
 The LORD is my shepherd; I shall not want.

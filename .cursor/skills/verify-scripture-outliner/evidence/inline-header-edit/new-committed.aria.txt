@@ -1,7 +1,7 @@
 title: Scripture Outliner
 url: http://127.0.0.1:4173/
 h1: Scripture Outliner
-extra: {"step":"cleared","segment":{"start":0,"end":8,"summary":"The LORD is shepherd"},"selected":[]}
+extra: {"step":"new-header-committed","headerBox":{"x":32,"y":208,"width":326,"height":24.609375},"slotDx":0,"slotDy":0}
 ---
 SCRIPTURE OUTLINER
 Show text

@@ -4,16 +4,15 @@ h1: Scripture Outliner
 extra: {"selected":[18,19,20,21,22,23,24],"selectionPaint":[{"id":18,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":19,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":20,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":21,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":22,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":23,"backgroundColor":"rgb(243, 217, 138)","selected":true},{"id":24,"backgroundColor":"rgb(243, 217, 138)","selected":true}],"unselected":[{"id":0,"backgroundColor":"rgba(0, 0, 0, 0)","selected":false},{"id":9,"backgroundColor":"rgba(0, 0, 0, 0)","selected":false}]}
 ---
 SCRIPTURE OUTLINER
+Show text
 Export
 New
 The LORD is shepherd
 The LORD is my shepherd; I shall not want.
 Green pastures
-
 He maketh me to lie down in green pastures:
 Still waters
 he leadeth me beside the still waters.
-
 He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.
 Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.
 Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.
