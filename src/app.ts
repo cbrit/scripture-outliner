@@ -720,8 +720,8 @@ export function mount(root: HTMLElement): void {
     if (!(item instanceof HTMLElement)) {
       return;
     }
-    const format = item.dataset.exportFormat;
-    if (format === "md" || format === "docx") {
+    const format = parseExportFormat(item.dataset.exportFormat);
+    if (format) {
       exportAs(format);
     }
   });
@@ -1120,6 +1120,17 @@ function requireEl<T extends HTMLElement>(
     throw new Error(`Missing ${selector}`);
   }
   return el;
+}
+
+function parseExportFormat(value: string | undefined): ExportFormat | null {
+  switch (value) {
+    case "md":
+      return "md";
+    case "docx":
+      return "docx";
+    default:
+      return null;
+  }
 }
 
 function clamp(value: number, min: number, max: number): number {

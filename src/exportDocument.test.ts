@@ -1,29 +1,26 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
 import { test } from "node:test";
-import { passageFromText } from "./tokenize.ts";
+import {
+  exportBlocks,
+  outlineFilename,
+  renderDocx,
+  renderMarkdown,
+} from "./exportDocument.ts";
 import {
   createDocument,
   createSegment,
   insertSegment,
 } from "./segments.ts";
-import {
-  exportBlocks,
-  exportOutlineMarkdown,
-  outlineFilename,
-  renderDocx,
-} from "./exportDocument.ts";
+import { passageFromText } from "./tokenize.ts";
 import type { Document } from "./types.ts";
 
 function sampleDoc(): Document {
   const passage = passageFromText("Sample", "Alpha beta gamma.\n\nDelta epsilon.");
-  const withEmpty = insertSegment(
-    [],
-    createSegment({ start: 0, end: 2 }, 0, ""),
-  );
+  const withEmpty = insertSegment([], createSegment({ start: 0, end: 2 }, 0, ""));
   const withHeader = insertSegment(
     withEmpty,
     createSegment({ start: 3, end: 4 }, 0, "Second half"),
@@ -31,10 +28,25 @@ function sampleDoc(): Document {
   return { ...createDocument(passage), segments: withHeader };
 }
 
+function emptySummaryOnlyDoc(): Document {
+  const passage = passageFromText("Sample", "Alpha beta gamma.\n\nDelta epsilon.");
+  return {
+    ...createDocument(passage),
+    segments: insertSegment([], createSegment({ start: 0, end: 2 }, 0, "")),
+  };
+}
+
+function unzipDocumentXml(bytes: Uint8Array): string {
+  const dir = mkdtempSync(join(tmpdir(), "so-docx-"));
+  const file = join(dir, "out.docx");
+  writeFileSync(file, bytes);
+  execFileSync("unzip", ["-o", "-q", file, "-d", dir]);
+  return readFileSync(join(dir, "word/document.xml"), "utf8");
+}
+
 test("full markdown includes title, real heading, and body", () => {
-  const md = exportOutlineMarkdown(sampleDoc(), true);
   assert.equal(
-    md,
+    renderMarkdown(exportBlocks(sampleDoc(), true)),
     `# Sample
 
 Alpha beta gamma.
@@ -46,10 +58,9 @@ Delta epsilon.
   );
 });
 
-test("headers-only markdown omits body and empty-summary headings", () => {
-  const md = exportOutlineMarkdown(sampleDoc(), false);
+test("headers-only markdown omits body", () => {
   assert.equal(
-    md,
+    renderMarkdown(exportBlocks(sampleDoc(), false)),
     `# Sample
 
 ## Second half
@@ -57,10 +68,12 @@ test("headers-only markdown omits body and empty-summary headings", () => {
   );
 });
 
-test("empty-summary segments do not invent snippet headings", () => {
-  const blocks = exportBlocks(sampleDoc(), false);
-  const headings = blocks.filter((block) => block.kind === "heading");
-  assert.deepEqual(headings, [{ kind: "heading", depth: 0, text: "Second half" }]);
+test("empty-summary segment does not invent a snippet heading", () => {
+  assert.equal(
+    renderMarkdown(exportBlocks(emptySummaryOnlyDoc(), false)),
+    `# Sample
+`,
+  );
 });
 
 test("outlineFilename slugs the title and extension", () => {
@@ -74,21 +87,15 @@ test("docx zip contains title, heading, and body; headers-only drops body", () =
   const headers = renderDocx(exportBlocks(sampleDoc(), false));
   assert.equal(full[0], 0x50);
   assert.equal(full[1], 0x4b);
-  assert.ok(full.length > 200);
-  assert.ok(headers.length > 200);
+  assert.ok(full.byteLength > 200);
+  assert.ok(headers.byteLength > 200);
 
-  const dir = mkdtempSync(join(tmpdir(), "so-docx-"));
-  const fullPath = join(dir, "full.docx");
-  const headersPath = join(dir, "headers.docx");
-  writeFileSync(fullPath, full);
-  writeFileSync(headersPath, headers);
-  execFileSync("unzip", ["-o", fullPath, "-d", join(dir, "full")]);
-  execFileSync("unzip", ["-o", headersPath, "-d", join(dir, "headers")]);
-  const fullXml = readFileSync(join(dir, "full/word/document.xml"), "utf8");
-  const headersXml = readFileSync(join(dir, "headers/word/document.xml"), "utf8");
+  const fullXml = unzipDocumentXml(full);
+  const headersXml = unzipDocumentXml(headers);
   assert.match(fullXml, /Sample/);
   assert.match(fullXml, /Second half/);
   assert.match(fullXml, /Alpha beta gamma/);
+  assert.match(headersXml, /Sample/);
   assert.match(headersXml, /Second half/);
   assert.doesNotMatch(headersXml, /Alpha beta gamma/);
   assert.doesNotMatch(headersXml, /Delta epsilon/);

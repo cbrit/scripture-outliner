@@ -1,6 +1,6 @@
-import { assertNever, type Document, type Word, type WordId } from "./types";
-import { passageParts } from "./segments";
-import { breaksForPassage, type BreakKind } from "./tokenize";
+import { assertNever, type Document, type Word, type WordId } from "./types.ts";
+import { passageParts } from "./segments.ts";
+import { breaksForPassage, type BreakKind } from "./tokenize.ts";
 
 export type ExportFormat = "md" | "docx";
 
@@ -106,16 +106,22 @@ export function renderMarkdown(blocks: readonly ExportBlock[]): string {
   return `${lines.join("\n").trimEnd()}\n`;
 }
 
-export function exportOutlineMarkdown(doc: Document, includeBody: boolean): string {
-  return renderMarkdown(exportBlocks(doc, includeBody));
-}
-
 export function outlineFilename(title: string, ext: ExportFormat): string {
-  const slug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return `${slug || "outline"}.${ext}`;
+  const slug =
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "outline";
+  switch (ext) {
+    case "md":
+      return `${slug}.md`;
+    case "docx":
+      return `${slug}.docx`;
+    default: {
+      const _exhaustive: never = ext;
+      return assertNever(_exhaustive);
+    }
+  }
 }
 
 function xmlEscape(text: string): string {

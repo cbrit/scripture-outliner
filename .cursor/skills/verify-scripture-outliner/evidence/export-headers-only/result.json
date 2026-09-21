@@ -1,0 +1,21 @@
+{
+  "feature": "export-headers-only",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "before": {
+      "png": "evidence/export-headers-only/export-menu-open.png",
+      "aria": "evidence/export-headers-only/export-menu-open.aria.txt"
+    },
+    "after": {
+      "png": "evidence/export-headers-only/after-download.png",
+      "aria": "evidence/export-headers-only/after-download.aria.txt"
+    },
+    "hideHow": "prefs-shim",
+    "text": "# Sample\n\n## The LORD is shepherd\n"
+  },
+  "at": "2026-09-21T02:14:15.920Z"
+}

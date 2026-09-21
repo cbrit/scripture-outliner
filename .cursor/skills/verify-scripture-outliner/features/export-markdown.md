@@ -21,7 +21,7 @@ Preconditions:
 - One depth-0 header `The LORD is shepherd` after Deeper + Summary.
 
 - **Outline.** Select `data-word-id` 0 then 8, **Deeper**, **Summary** `The LORD is shepherd`. Tap the margin to hide chrome.
-- **Menu.** Tap `export`. `export-menu` is visible. `export-markdown` and `export-docx` are visible. Tap targets are at least 44px tall. Capture `menu-open.png` at 390×844 with `Scripture Outliner` in the heading.
+- **Menu.** Tap `export`. `export-menu` is visible. `export-markdown` and `export-docx` are visible. Tap targets are at least 44px tall. Capture `export-menu-open.png` at 390×844 with `Scripture Outliner` in the heading.
 - **Download.** `page.waitForEvent("download")` before tapping `export-markdown`. The file name ends with `.md`. The text contains `# Sample`, `## The LORD is shepherd`, and `I shall not want`. Copy it to `evidence/export-markdown/outline.md`.
 
 ## Gotchas

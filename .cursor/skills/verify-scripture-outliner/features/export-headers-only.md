@@ -19,7 +19,7 @@ Preconditions:
 - Same outlined sample as [export-markdown](./export-markdown.md).
 
 - **Hide body.** Uncheck `show-text-input`. Word count is 0. Record `hideHow` as `show-text-input` in the snapshot extra field.
-- **Menu.** Tap `export`. Capture `menu-open.png`.
+- **Menu.** Tap `export`. Capture `export-menu-open.png`.
 - **Download.** Wait for `download`, tap `export-markdown`. The file contains `# Sample` and `## The LORD is shepherd`. It must not contain `I shall not want`. Copy it to `evidence/export-headers-only/outline.md`.
 
 ## Gotchas

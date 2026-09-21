@@ -464,6 +464,7 @@ async function hideBodyText(page) {
     );
   });
   await page.reload({ waitUntil: "networkidle" });
+  await page.getByTestId("editor").waitFor({ state: "visible" });
   await page.getByTestId("passage").waitFor({ state: "visible" });
   return "prefs-shim";
 }
@@ -490,21 +491,20 @@ async function openExportMenu(page) {
 async function driveExportMarkdown(page) {
   await setupOutlinedSample(page);
   await openExportMenu(page);
-  const before = await snapshot(page, path.join(evidenceRoot, "export-markdown"), "menu-open", {
+  const before = await snapshot(page, path.join(evidenceRoot, "export-markdown"), "export-menu-open", {
     step: "export-menu-open",
   });
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("export-markdown").click();
   const download = await downloadPromise;
-  const filePath = await download.path();
-  if (!filePath) {
-    throw new Error("Markdown download had no path");
-  }
   const suggested = download.suggestedFilename();
   if (!suggested.endsWith(".md")) {
     throw new Error(`Expected .md download, got ${suggested}`);
   }
-  const text = fs.readFileSync(filePath, "utf8");
+  const dest = path.join(evidenceRoot, "export-markdown", "outline.md");
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  await download.saveAs(dest);
+  const text = fs.readFileSync(dest, "utf8");
   if (!text.includes("# Sample")) {
     throw new Error(`Markdown missing title, got ${JSON.stringify(text.slice(0, 200))}`);
   }
@@ -514,9 +514,6 @@ async function driveExportMarkdown(page) {
   if (!text.includes("I shall not want")) {
     throw new Error("Markdown with text shown should include body");
   }
-  const dest = path.join(evidenceRoot, "export-markdown", "outline.md");
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(filePath, dest);
   const after = await snapshot(page, path.join(evidenceRoot, "export-markdown"), "after-download", {
     step: "markdown-downloaded",
     suggested,
@@ -528,18 +525,17 @@ async function driveExportHeadersOnly(page) {
   await setupOutlinedSample(page);
   const hideHow = await hideBodyText(page);
   await openExportMenu(page);
-  const before = await snapshot(page, path.join(evidenceRoot, "export-headers-only"), "menu-open", {
+  const before = await snapshot(page, path.join(evidenceRoot, "export-headers-only"), "export-menu-open", {
     step: "headers-only-menu",
     hideHow,
   });
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("export-markdown").click();
   const download = await downloadPromise;
-  const filePath = await download.path();
-  if (!filePath) {
-    throw new Error("Headers-only download had no path");
-  }
-  const text = fs.readFileSync(filePath, "utf8");
+  const dest = path.join(evidenceRoot, "export-headers-only", "outline.md");
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  await download.saveAs(dest);
+  const text = fs.readFileSync(dest, "utf8");
   if (!text.includes("# Sample")) {
     throw new Error(`Headers-only missing title: ${JSON.stringify(text.slice(0, 200))}`);
   }
@@ -549,9 +545,6 @@ async function driveExportHeadersOnly(page) {
   if (text.includes("I shall not want")) {
     throw new Error("Headers-only export leaked body text");
   }
-  const dest = path.join(evidenceRoot, "export-headers-only", "outline.md");
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(filePath, dest);
   const after = await snapshot(page, path.join(evidenceRoot, "export-headers-only"), "after-download", {
     step: "headers-only-downloaded",
     hideHow,
@@ -562,30 +555,26 @@ async function driveExportHeadersOnly(page) {
 async function driveExportDocx(page) {
   await setupOutlinedSample(page);
   await openExportMenu(page);
-  await snapshot(page, path.join(evidenceRoot, "export-docx"), "menu-open", {
+  await snapshot(page, path.join(evidenceRoot, "export-docx"), "export-menu-open", {
     step: "docx-menu-open",
   });
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("export-docx").click();
   const download = await downloadPromise;
-  const filePath = await download.path();
-  if (!filePath) {
-    throw new Error("Docx download had no path");
-  }
   const suggested = download.suggestedFilename();
   if (!suggested.endsWith(".docx")) {
     throw new Error(`Expected .docx download, got ${suggested}`);
   }
-  const buf = fs.readFileSync(filePath);
-  if (buf.length < 200) {
+  const dest = path.join(evidenceRoot, "export-docx", "outline.docx");
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  await download.saveAs(dest);
+  const buf = fs.readFileSync(dest);
+  if (buf.length <= 200) {
     throw new Error(`Docx too small: ${buf.length}`);
   }
   if (buf[0] !== 0x50 || buf[1] !== 0x4b) {
     throw new Error("Docx did not start with PK zip magic");
   }
-  const dest = path.join(evidenceRoot, "export-docx", "outline.docx");
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(filePath, dest);
   return { suggested, bytes: buf.length, magic: "PK" };
 }
 
