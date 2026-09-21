@@ -127,4 +127,4 @@ All under `.cursor/skills/verify-scripture-outliner/scripts/`:
 
 `scripts/common.sh` is sourced by the shell helpers. `scripts/package.json` pins `playwright-core`. `scripts/node_modules` is local to the skill and gitignored.
 
-Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`, `icon-toolbar`, `show-text`, `export-markdown`, `export-headers-only`, `export-docx`.
+Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`, `icon-toolbar`, `show-text`, `export-markdown`, `export-headers-only`, `export-docx`, `header-body-spacing`.

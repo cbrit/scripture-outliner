@@ -1031,9 +1031,6 @@ function appendWordRange(
     const kind = breaks[id] ?? "space";
     if (first) {
       first = false;
-      if (kind !== "none" && kind !== "space") {
-        appendBreak(run, kind, id);
-      }
     } else {
       appendBreak(run, kind, id);
     }

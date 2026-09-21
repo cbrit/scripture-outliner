@@ -1,0 +1,36 @@
+{
+  "feature": "header-body-spacing",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "gaps": [
+      {
+        "depth": "0",
+        "header": "The LORD is shepherd",
+        "firstWord": "The",
+        "gapPx": 5.09375
+      },
+      {
+        "depth": "1",
+        "header": "Green pastures",
+        "firstWord": "He",
+        "gapPx": 4.796875
+      },
+      {
+        "depth": "2",
+        "header": "Still waters",
+        "firstWord": "he",
+        "gapPx": 4.703125
+      }
+    ],
+    "spread": 0.390625,
+    "nested": {
+      "png": "evidence/header-body-spacing/nested.png",
+      "aria": "evidence/header-body-spacing/nested.aria.txt"
+    }
+  },
+  "at": "2026-09-21T02:32:52.559Z"
+}

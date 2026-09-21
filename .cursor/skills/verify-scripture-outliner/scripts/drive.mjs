@@ -3,7 +3,7 @@
  * Drive Scripture Outliner in Chrome via Playwright against the launched preview.
  *
  * Usage: node drive.mjs <feature-id>
- * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar | show-text | export-markdown | export-headers-only | export-docx
+ * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar | show-text | export-markdown | export-headers-only | export-docx | header-body-spacing
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -912,6 +912,40 @@ async function headerPaddingByDepth(page) {
   );
 }
 
+async function headerToFirstWordGaps(page) {
+  return page.evaluate(() => {
+    const passage = document.querySelector('[data-testid="passage"]');
+    if (!(passage instanceof HTMLElement)) {
+      throw new Error("Missing passage");
+    }
+    return [...passage.querySelectorAll('[data-testid="section-header"]')].map((header) => {
+      let sibling = header.nextElementSibling;
+      let firstWord = null;
+      while (sibling instanceof HTMLElement && firstWord === null) {
+        if (sibling.matches('[data-testid="word"]')) {
+          firstWord = sibling;
+          break;
+        }
+        const nested = sibling.querySelector('[data-testid="word"]');
+        if (nested instanceof HTMLElement) {
+          firstWord = nested;
+          break;
+        }
+        sibling = sibling.nextElementSibling;
+      }
+      if (!(firstWord instanceof HTMLElement)) {
+        throw new Error(`No body word after header ${JSON.stringify(header.textContent)}`);
+      }
+      return {
+        depth: header.getAttribute("data-depth"),
+        header: (header.textContent ?? "").trim(),
+        firstWord: (firstWord.textContent ?? "").trim(),
+        gapPx: firstWord.getBoundingClientRect().top - header.getBoundingClientRect().bottom,
+      };
+    });
+  });
+}
+
 async function storedPrefs(page) {
   return page.evaluate(() => {
     const raw = localStorage.getItem("scripture-outliner.prefs.v1");
@@ -1031,6 +1065,35 @@ async function driveShowText(page) {
   };
 }
 
+async function driveHeaderBodySpacing(page) {
+  await driveImportSample(page);
+  await nestedOutlineRange(page);
+  await deselectByMargin(page);
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    const pane = document.querySelector('[data-testid="pane-text"]');
+    if (pane instanceof HTMLElement) {
+      pane.scrollTop = 0;
+    }
+  });
+  const gaps = await headerToFirstWordGaps(page);
+  const depths = gaps.map((entry) => entry.depth);
+  if (!depths.includes("0") || !depths.includes("1") || !depths.includes("2")) {
+    throw new Error(`Expected depths 0–2, got ${JSON.stringify(gaps)}`);
+  }
+  const nested = await snapshot(page, path.join(evidenceRoot, "header-body-spacing"), "nested", {
+    gaps,
+  });
+  const values = gaps.map((entry) => entry.gapPx);
+  const spread = Math.max(...values) - Math.min(...values);
+  if (spread > 8) {
+    throw new Error(
+      `Header-to-body gaps differ across depths by ${spread.toFixed(2)}px: ${JSON.stringify(gaps)}`,
+    );
+  }
+  return { gaps, spread, nested };
+}
+
 async function driveIconToolbar(page) {
   await driveImportSample(page);
   await clickWordId(page, 0);
@@ -1065,6 +1128,7 @@ const drivers = {
   "export-markdown": driveExportMarkdown,
   "export-headers-only": driveExportHeadersOnly,
   "export-docx": driveExportDocx,
+  "header-body-spacing": driveHeaderBodySpacing,
 };
 
 ensurePlaywright();
