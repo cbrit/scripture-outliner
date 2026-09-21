@@ -485,6 +485,15 @@ async function openExportMenu(page) {
   if (!mdBox || mdBox.height < 44) {
     throw new Error(`export-markdown tap target is ${mdBox?.width}x${mdBox?.height}, expected height >= 44`);
   }
+  const menuBox = await menu.boundingBox();
+  if (!menuBox) {
+    throw new Error("Export menu has no bounding box");
+  }
+  if (menuBox.x < -1 || menuBox.x + menuBox.width > viewport.width + 1) {
+    throw new Error(
+      `Export menu clipped at 390px: x=${menuBox.x} w=${menuBox.width}`,
+    );
+  }
   return menu;
 }
 

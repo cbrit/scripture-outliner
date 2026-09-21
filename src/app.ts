@@ -625,6 +625,21 @@ export function mount(root: HTMLElement): void {
   function setExportMenuOpen(open: boolean): void {
     refs.exportMenu.hidden = !open;
     refs.exportButton.setAttribute("aria-expanded", open ? "true" : "false");
+    if (!open) {
+      refs.exportMenu.style.left = "";
+      return;
+    }
+    refs.exportMenu.style.left = "0px";
+    const pad = 8;
+    const box = refs.exportMenu.getBoundingClientRect();
+    let left = 0;
+    if (box.right > window.innerWidth - pad) {
+      left -= box.right - (window.innerWidth - pad);
+    }
+    if (box.left + left < pad) {
+      left += pad - (box.left + left);
+    }
+    refs.exportMenu.style.left = `${left}px`;
   }
 
   function toggleExportMenu(): void {

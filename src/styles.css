@@ -179,9 +179,11 @@ button.danger {
 .export-menu {
   position: absolute;
   top: calc(100% + 4px);
-  right: 0;
+  left: 0;
+  right: auto;
   z-index: 12;
   min-width: 220px;
+  max-width: min(280px, calc(100vw - 16px));
   padding: 4px;
   background: var(--cream);
   border: 1px solid var(--line);
