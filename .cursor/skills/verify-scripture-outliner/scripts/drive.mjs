@@ -3,7 +3,7 @@
  * Drive Scripture Outliner in Chrome via Playwright against the launched preview.
  *
  * Usage: node drive.mjs <feature-id>
- * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar | show-text | export-markdown | export-headers-only | export-docx | header-body-spacing
+ * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar | show-text | export-markdown | export-headers-only | export-docx | header-body-spacing | delete-rejoin
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -1115,6 +1115,131 @@ async function driveIconToolbar(page) {
   return { after, deleteDisabled };
 }
 
+const ONE_LINE_TEXT = "The LORD is my shepherd, I shall not want";
+
+async function importOneLine(page) {
+  const importView = page.getByTestId("import-view");
+  if (!(await importView.isVisible())) {
+    throw new Error("Import view should be visible for one-line text");
+  }
+  await page.getByTestId("import-text").fill(ONE_LINE_TEXT);
+  await page.getByTestId("import-submit").click();
+  await page.getByTestId("passage").waitFor({ state: "visible" });
+  await page.getByTestId("word").first().waitFor();
+  const texts = await page.getByTestId("word").evaluateAll((els) =>
+    els.map((el) => el.textContent ?? ""),
+  );
+  if (texts.join(" ") !== "The LORD is my shepherd, I shall not want") {
+    throw new Error(`Unexpected one-line tokens: ${JSON.stringify(texts)}`);
+  }
+}
+
+async function wordBox(page, id) {
+  return page.evaluate((wordId) => {
+    const el = document.querySelector(`[data-word-id="${wordId}"]`);
+    if (!(el instanceof HTMLElement)) {
+      throw new Error(`Missing word ${wordId}`);
+    }
+    const box = el.getBoundingClientRect();
+    return { id: wordId, text: el.textContent ?? "", x: box.x, y: box.y };
+  }, id);
+}
+
+async function passageInnerText(page) {
+  return page.getByTestId("passage").innerText();
+}
+
+async function assertShepherdIJoined(page, label) {
+  const shepherd = await wordBox(page, 4);
+  const eye = await wordBox(page, 5);
+  if (Math.abs(shepherd.y - eye.y) >= 2) {
+    throw new Error(
+      `${label}: "shepherd," y=${shepherd.y} and "I" y=${eye.y} should share a line`,
+    );
+  }
+  const text = await passageInnerText(page);
+  if (text.includes("shepherd,\nI")) {
+    throw new Error(`${label}: leftover segment break in ${JSON.stringify(text)}`);
+  }
+}
+
+async function assertShepherdISplit(page, label) {
+  const shepherd = await wordBox(page, 4);
+  const eye = await wordBox(page, 5);
+  if (Math.abs(shepherd.y - eye.y) < 2) {
+    throw new Error(`${label}: expected section split, "I" stayed on the same line`);
+  }
+  const text = await passageInnerText(page);
+  if (!text.includes("shepherd,\nI")) {
+    throw new Error(`${label}: expected a segment break, got ${JSON.stringify(text)}`);
+  }
+}
+
+async function driveDeleteRejoin(page) {
+  await importOneLine(page);
+  await assertShepherdIJoined(page, "before-split");
+  const before = await snapshot(page, path.join(evidenceRoot, "delete-rejoin"), "before", {
+    step: "before-split",
+  });
+
+  await clickWordId(page, 5);
+  await clickWordId(page, 8);
+  await page.getByTestId("action-deeper").click();
+  await waitForExactSegment(page);
+  await deselectByMargin(page);
+  await assertShepherdISplit(page, "after-section");
+  const afterSection = await snapshot(
+    page,
+    path.join(evidenceRoot, "delete-rejoin"),
+    "after-section",
+    { step: "after-section" },
+  );
+
+  await clickWordId(page, 5);
+  await waitForExactSegment(page);
+  await page.getByTestId("action-delete").click();
+  await deselectByMargin(page);
+  await assertShepherdIJoined(page, "after-delete");
+  const afterDelete = await snapshot(
+    page,
+    path.join(evidenceRoot, "delete-rejoin"),
+    "after-delete",
+    { step: "after-delete" },
+  );
+
+  await page.getByTestId("new-document").click();
+  await importOneLine(page);
+  await clickWordId(page, 0);
+  await clickWordId(page, 4);
+  await page.getByTestId("action-deeper").click();
+  await waitForExactSegment(page);
+  await deselectByMargin(page);
+  await clickWordId(page, 5);
+  await clickWordId(page, 8);
+  await page.getByTestId("action-deeper").click();
+  await waitForExactSegment(page);
+  await deselectByMargin(page);
+  const afterSiblings = await snapshot(
+    page,
+    path.join(evidenceRoot, "delete-rejoin"),
+    "after-siblings",
+    { step: "after-siblings" },
+  );
+  await clickWordId(page, 5);
+  await waitForExactSegment(page);
+  await page.getByTestId("action-delete").click();
+  await deselectByMargin(page);
+  const afterSiblingDelete = await snapshot(
+    page,
+    path.join(evidenceRoot, "delete-rejoin"),
+    "after-sibling-delete",
+    { step: "after-sibling-delete" },
+  );
+  await assertShepherdIJoined(page, "after-sibling-delete");
+
+  return { before, afterSection, afterDelete, afterSiblings, afterSiblingDelete };
+}
+
 const drivers = {
   "import-sample": driveImportSample,
   "word-selection": driveWordSelection,
@@ -1129,6 +1254,7 @@ const drivers = {
   "export-headers-only": driveExportHeadersOnly,
   "export-docx": driveExportDocx,
   "header-body-spacing": driveHeaderBodySpacing,
+  "delete-rejoin": driveDeleteRejoin,
 };
 
 ensurePlaywright();
