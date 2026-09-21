@@ -46,7 +46,6 @@ type PendingTap =
   | { kind: "header"; id: string; x: number; y: number }
   | { kind: "empty"; x: number; y: number };
 
-const ICON_SECTION = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M7 5v14M17 5v14M7 12h10"/></svg>`;
 const ICON_DEEPER = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M6 5h12M10 10h8M10 10v8M7 15l3 3 3-3"/></svg>`;
 const ICON_SHALLOWER = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M6 19h12M10 14h8M10 14V6M7 9l3-3 3 3"/></svg>`;
 const ICON_SUMMARY = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 9h8M8 13h6"/></svg>`;
@@ -491,10 +490,6 @@ export function mount(root: HTMLElement): void {
     render();
   }
 
-  function markSection(): void {
-    applySegmentDepth(0);
-  }
-
   function markDeeper(): void {
     if (!doc || !doc.selection) {
       return;
@@ -723,10 +718,6 @@ export function mount(root: HTMLElement): void {
     });
   }
 
-  refs.selectionToolbar.querySelector("[data-section]")?.addEventListener(
-    "click",
-    markSection,
-  );
   refs.selectionToolbar.querySelector("[data-deeper]")?.addEventListener(
     "click",
     markDeeper,
@@ -834,7 +825,6 @@ function shellHtml(): string {
                 data-testid="selection-toolbar"
                 hidden
               >
-                <button type="button" data-section data-testid="action-section" aria-label="Section" title="Section">${ICON_SECTION}</button>
                 <button type="button" data-deeper data-testid="action-deeper" aria-label="Deeper" title="Deeper">${ICON_DEEPER}</button>
                 <button type="button" data-shallower data-testid="action-shallower" aria-label="Shallower" title="Shallower">${ICON_SHALLOWER}</button>
                 <button type="button" data-summary data-testid="action-summary" aria-label="Summary" title="Summary">${ICON_SUMMARY}</button>

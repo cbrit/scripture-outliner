@@ -8,7 +8,7 @@
   "result": {
     "selectedBefore": 1,
     "selectedAfter": 0,
-    "headersAfterSection": 1,
+    "headersAfterDeeper": 1,
     "headersAfterDeselect": 1,
     "reselected": 1,
     "before": {
@@ -20,5 +20,5 @@
       "aria": "evidence/deselect-outside/deselected.aria.txt"
     }
   },
-  "at": "2026-09-20T22:27:05.731Z"
+  "at": "2026-09-21T01:48:35.067Z"
 }

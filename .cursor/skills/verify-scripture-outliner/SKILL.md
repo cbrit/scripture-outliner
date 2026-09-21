@@ -5,7 +5,7 @@ description: Drive the Scripture Outliner Vite PWA in a real browser (Playwright
 
 # Verify Scripture Outliner
 
-Mobile-first vanilla DOM PWA. One document in `localStorage`. Users import text, tap **words** (not characters), and mark Section / Deeper / Shallower / Summary by hand. The passage view **is** the outline: bold headers sit above their body. Nothing is auto-outlined.
+Mobile-first vanilla DOM PWA. One document in `localStorage`. Users import text, tap **words** (not characters), and mark Deeper / Shallower / Summary by hand. The passage view **is** the outline: bold headers sit above their body. Nothing is auto-outlined.
 
 This skill is for agents. Drive the real UI. Do not call `mount()`, `setDoc`, or `localStorage.setItem` as a substitute for a user action.
 
@@ -69,9 +69,9 @@ Stable handles (prefer `data-testid`):
 | `word` | One token; also `data-word-id` |
 | `section-header` | Bold inline heading from a non-empty summary; `data-depth` is `0`+. Absent until Summary is written |
 | `pin-start` / `pin-end` | Selection pins (`aria-label` Selection start/end) |
-| `selection-toolbar` | Icon hint attached to the current selection (Section / Deeper / Shallower / Summary / Delete) |
-| `action-section` `action-deeper` `action-shallower` `action-summary` `action-delete` | Icon action buttons (`aria-label` only; no text labels). Delete is the X in this group. |
-| *(removed)* `action-bar` `action-clear` | Sticky bar and Clear are gone. Margin / outside tap deselects. |
+| `selection-toolbar` | Icon hint attached to the current selection (Deeper / Shallower / Summary / Delete) |
+| `action-deeper` `action-shallower` `action-summary` `action-delete` | Icon action buttons (`aria-label` only; no text labels). Delete is the X in this group. |
+| *(removed)* `action-section` `action-bar` `action-clear` | Section (H), sticky bar, and Clear are gone. Deeper creates structure on loose text. Margin / outside tap deselects. |
 | `summary-dialog` `summary-field` `summary-save` `summary-cancel` | Summary modal |
 | `export` `new-document` | Header actions |
 
@@ -93,14 +93,14 @@ Required for a UI proof:
 
 Proof standards:
 
-- Exercise the real click/type path. Reloading after Section is how persistence is proved, not reading the store module.
+- Exercise the real click/type path. Reloading after Deeper is how persistence is proved, not reading the store module.
 - Capture action and resulting state (empty import → sample loaded; tap → `.selected` + visible pins).
-- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; no `section-header` after Section/Deeper alone; `section-header` nodes after a non-empty Summary save.
+- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; no `section-header` after Deeper alone; `section-header` nodes after a non-empty Summary save.
 - No mocks. This app has no backend.
 
 Seeded proof from the first skill run: `evidence/import-sample/`.
 
-**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone. Inline-outline PRs must show (1) a bold section header in the passage, (2) a nested indented subsection, and (3) depth ≥ 2 when practical. Nested body text must share the passage color. Only `.selected` may tint words. Icon-toolbar PRs must show the icon hint including the Delete X.
+**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone. Inline-outline PRs must show (1) a bold section header in the passage, (2) a nested indented subsection, and (3) depth ≥ 2 when practical. Nested body text must share the passage color. Only `.selected` may tint words. Icon-toolbar PRs must show the icon hint including the Delete X, without a Section (H) button.
 
 ## Cleanup
 
