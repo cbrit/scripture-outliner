@@ -302,7 +302,7 @@ export function mount(root: HTMLElement): void {
   }
 
   function positionPins(): void {
-    if (!doc || !doc.selection) {
+    if (!doc || !doc.selection || summaryField()) {
       refs.pinStart.hidden = true;
       refs.pinEnd.hidden = true;
       return;
@@ -379,21 +379,24 @@ export function mount(root: HTMLElement): void {
     let top = rangeTop - origin.top - toolbarH - 8;
     let placement = "above";
     if (preferBelow || top < pad) {
-      top = rangeBottom - origin.top + 8;
+      top = rangeBottom - origin.top + (preferBelow ? 12 : 8);
       placement = "below";
     }
     if (top < pad) {
       top = pad;
     }
-    const pinCenterX = (startBox.left + startBox.right) / 2 - origin.left;
-    // Keep the hint off the start pin and off the following line of words.
-    const pinClear = 26;
-    let left = pinCenterX + pinClear;
-    if (left + toolbarW > wrap.clientWidth - pad) {
-      left = pinCenterX - pinClear - toolbarW;
-    }
-    if (left < pad) {
-      left = pad;
+    let left = pad;
+    if (!preferBelow) {
+      const pinCenterX = (startBox.left + startBox.right) / 2 - origin.left;
+      // Keep the hint off the start pin and off the following line of words.
+      const pinClear = 26;
+      left = pinCenterX + pinClear;
+      if (left + toolbarW > wrap.clientWidth - pad) {
+        left = pinCenterX - pinClear - toolbarW;
+      }
+      if (left < pad) {
+        left = pad;
+      }
     }
     if (left + toolbarW > wrap.clientWidth - pad) {
       left = wrap.clientWidth - toolbarW - pad;
