@@ -1,7 +1,7 @@
 title: Scripture Outliner
 url: http://127.0.0.1:4173/
 h1: Scripture Outliner
-extra: {"gaps":[{"depth":"0","header":"The LORD is shepherd","firstWord":"The","gapPx":5.09375},{"depth":"1","header":"Green pastures","firstWord":"He","gapPx":36.875},{"depth":"2","header":"Still waters","firstWord":"he","gapPx":4.703125}]}
+extra: {"gaps":[{"depth":"0","header":"The LORD is shepherd","firstWord":"The","gapPx":5.09375},{"depth":"1","header":"Green pastures","firstWord":"He","gapPx":4.796875},{"depth":"2","header":"Still waters","firstWord":"he","gapPx":4.703125}]}
 ---
 SCRIPTURE OUTLINER
 Show text
@@ -10,11 +10,9 @@ New
 The LORD is shepherd
 The LORD is my shepherd; I shall not want.
 Green pastures
-
 He maketh me to lie down in green pastures:
 Still waters
 he leadeth me beside the still waters.
-
 He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.
 Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.
 Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.

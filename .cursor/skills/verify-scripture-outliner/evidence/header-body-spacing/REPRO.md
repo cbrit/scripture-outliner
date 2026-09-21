@@ -23,3 +23,5 @@ The extra ~32px (one line) after **Green pastures** is inside the following `.wo
 Screenshot: `evidence/header-body-spacing/uneven.png`.
 
 Drive (unfixed): `Header-to-body gaps differ across depths by 32.17px` (5.09 / 36.88 / 4.70).
+
+Drive (fixed): spread `0.39px` (5.09 / 4.80 / 4.70). Screenshot: `evidence/header-body-spacing/nested.png`.
