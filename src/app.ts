@@ -15,6 +15,7 @@ import {
   insertSegment,
   orderedSelection,
   passageParts,
+  type PassagePart,
   removeSegment,
   selectionEquals,
   setSegmentDepth,
@@ -216,7 +217,10 @@ export function mount(root: HTMLElement): void {
     refs.passage.replaceChildren();
     const current = doc;
     const breaks = breaksForPassage(current.passage);
-    const parts = passageParts(current.passage.words.length, current.segments);
+    const parts = mergeLooseWordParts(
+      passageParts(current.passage.words.length, current.segments),
+      breaks,
+    );
     for (const part of parts) {
       switch (part.kind) {
         case "header": {
@@ -1006,6 +1010,48 @@ function sectionHeader(segment: Document["segments"][number]): HTMLElement {
   el.setAttribute("data-testid", "section-header");
   el.textContent = segment.summary.trim();
   return el;
+}
+
+/**
+ * Keep trailing loose words in the previous unindented run when the original
+ * break was a space. A leftover headerless section must not force a newline.
+ */
+function mergeLooseWordParts(
+  parts: readonly PassagePart[],
+  breaks: BreakKind[],
+): PassagePart[] {
+  const merged: PassagePart[] = [];
+  for (const part of parts) {
+    switch (part.kind) {
+      case "header":
+        merged.push(part);
+        break;
+      case "words": {
+        const prev = merged[merged.length - 1];
+        if (
+          prev?.kind === "words" &&
+          part.depth === -1 &&
+          prev.depth < 1 &&
+          (breaks[part.start] ?? "space") === "space"
+        ) {
+          merged[merged.length - 1] = {
+            kind: "words",
+            start: prev.start,
+            end: part.end,
+            depth: prev.depth,
+          };
+          break;
+        }
+        merged.push(part);
+        break;
+      }
+      default: {
+        const _exhaustive: never = part;
+        assertNever(_exhaustive);
+      }
+    }
+  }
+  return merged;
 }
 
 function appendWordRange(

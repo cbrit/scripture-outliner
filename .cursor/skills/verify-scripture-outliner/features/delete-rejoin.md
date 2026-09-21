@@ -22,7 +22,7 @@ Preconditions:
 - **Before.** `shepherd,` and `I` share a y-coordinate. Passage inner text has no newline between them. Snapshot `before.png`.
 - **Split.** Select word 5 then 8. `action-deeper`. Margin deselect. `I` is on a new line. Snapshot `after-section.png`.
 - **Delete.** Tap word 5 (covers the section). `action-delete`. Margin deselect. `shepherd,` and `I` share a line again. Snapshot `after-delete.png`.
-- **Sibling leftover.** **New**, import the same sentence. Deeper on words 0–4, then 5–8. Delete the second section. Same join assertion. Snapshot `after-sibling-delete.png`.
+- **Sibling leftover.** **New**, import the same sentence. Deeper on words 0–4, margin deselect, then Deeper on 5–8. Delete the second section. Same join assertion. Snapshot `after-sibling-delete.png`.
 
 ## Gotchas
 

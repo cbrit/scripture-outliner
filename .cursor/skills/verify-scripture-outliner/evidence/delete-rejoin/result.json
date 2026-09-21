@@ -1,0 +1,31 @@
+{
+  "feature": "delete-rejoin",
+  "url": "http://127.0.0.1:4173/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "result": {
+    "before": {
+      "png": "evidence/delete-rejoin/before.png",
+      "aria": "evidence/delete-rejoin/before.aria.txt"
+    },
+    "afterSection": {
+      "png": "evidence/delete-rejoin/after-section.png",
+      "aria": "evidence/delete-rejoin/after-section.aria.txt"
+    },
+    "afterDelete": {
+      "png": "evidence/delete-rejoin/after-delete.png",
+      "aria": "evidence/delete-rejoin/after-delete.aria.txt"
+    },
+    "afterSiblings": {
+      "png": "evidence/delete-rejoin/after-siblings.png",
+      "aria": "evidence/delete-rejoin/after-siblings.aria.txt"
+    },
+    "afterSiblingDelete": {
+      "png": "evidence/delete-rejoin/after-sibling-delete.png",
+      "aria": "evidence/delete-rejoin/after-sibling-delete.aria.txt"
+    }
+  },
+  "at": "2026-09-21T02:39:22.641Z"
+}

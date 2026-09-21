@@ -1213,6 +1213,7 @@ async function driveDeleteRejoin(page) {
   await clickWordId(page, 4);
   await page.getByTestId("action-deeper").click();
   await waitForExactSegment(page);
+  await deselectByMargin(page);
   await clickWordId(page, 5);
   await clickWordId(page, 8);
   await page.getByTestId("action-deeper").click();
