@@ -1,7 +1,7 @@
 title: Scripture Outliner
 url: http://127.0.0.1:4173/
 h1: Scripture Outliner
-extra: {"depths":["0","1","2"],"texts":[{"depth":"0","text":"The LORD is shepherd","placeholder":null,"paddingLeft":0},{"depth":"1","text":"Green pastures","placeholder":null,"paddingLeft":18.768},{"depth":"2","text":"Still waters","placeholder":null,"paddingLeft":36.064}]}
+extra: {"depths":["0","1","2"],"texts":[{"depth":"0","text":"The LORD is shepherd","placeholder":null,"paddingLeft":0},{"depth":"1","text":"Green pastures","placeholder":null,"paddingLeft":18.768},{"depth":"2","text":"Still waters","placeholder":null,"paddingLeft":36.064}],"bodyPaint":[{"id":0,"backgroundColor":"rgba(0, 0, 0, 0)","selected":false},{"id":9,"backgroundColor":"rgba(0, 0, 0, 0)","selected":false},{"id":18,"backgroundColor":"rgba(0, 0, 0, 0)","selected":false}]}
 ---
 SCRIPTURE OUTLINER
 Export

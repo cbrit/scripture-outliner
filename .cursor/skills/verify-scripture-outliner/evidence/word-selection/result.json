@@ -7,11 +7,44 @@
   },
   "result": {
     "selected": 5,
-    "filledGaps": 4,
+    "selectionPaint": [
+      {
+        "id": 0,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 1,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 2,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 3,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 4,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      }
+    ],
+    "outside": [
+      {
+        "id": 10,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "selected": false
+      }
+    ],
     "after": {
       "png": "evidence/word-selection/range.png",
       "aria": "evidence/word-selection/range.aria.txt"
     }
   },
-  "at": "2026-09-20T22:25:36.789Z"
+  "at": "2026-09-21T01:45:30.757Z"
 }

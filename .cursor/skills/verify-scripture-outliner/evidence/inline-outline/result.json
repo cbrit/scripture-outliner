@@ -31,6 +31,60 @@
         "paddingLeft": 36.064
       }
     ],
+    "bodyPaint": [
+      {
+        "id": 0,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "selected": false
+      },
+      {
+        "id": 9,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "selected": false
+      },
+      {
+        "id": 18,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "selected": false
+      }
+    ],
+    "selectionPaint": [
+      {
+        "id": 18,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 19,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 20,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 21,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 22,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 23,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      },
+      {
+        "id": 24,
+        "backgroundColor": "rgb(243, 217, 138)",
+        "selected": true
+      }
+    ],
     "before": {
       "png": "evidence/inline-outline/before.png",
       "aria": "evidence/inline-outline/before.aria.txt"
@@ -38,7 +92,11 @@
     "after": {
       "png": "evidence/inline-outline/nested.png",
       "aria": "evidence/inline-outline/nested.aria.txt"
+    },
+    "selectedShot": {
+      "png": "evidence/inline-outline/nested-selected.png",
+      "aria": "evidence/inline-outline/nested-selected.aria.txt"
     }
   },
-  "at": "2026-09-20T22:25:39.477Z"
+  "at": "2026-09-21T01:45:24.357Z"
 }
