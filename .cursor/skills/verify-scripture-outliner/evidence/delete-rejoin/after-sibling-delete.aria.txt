@@ -1,0 +1,13 @@
+title: Scripture Outliner
+url: http://127.0.0.1:4173/
+h1: Scripture Outliner
+extra: {"step":"after-sibling-delete"}
+---
+SCRIPTURE OUTLINER
+Show text
+Export
+New
+The LORD is my shepherd,
+I shall not want
+
+Tap a word to select. Tap a second word to extend. Drag the pins. Tap the margin to deselect.

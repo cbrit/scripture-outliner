@@ -46,6 +46,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Inline outline](./inline-outline.md) covers bold headers in the passage, nested indent, depth ≥ 2, and untinted body text.
 - [Header to body spacing](./header-body-spacing.md) covers even header→first-word gaps across nested depths.
 - [Show text](./show-text.md) covers the header checkbox that hides body words and leaves nested headers.
+- [Delete rejoins the original line](./delete-rejoin.md) covers Delete (X) removing a mid-phrase section break.
 - [Persistence](./persistence.md) covers `localStorage` restore after reload.
 - [Export markdown](./export-markdown.md) covers the Export menu and a full Markdown download with body text.
 - [Export headers only](./export-headers-only.md) covers Markdown when body text is hidden.
