@@ -21,12 +21,13 @@ import {
   suggestedDepth,
   updateSegment,
 } from "./segments";
-import { clearDocument, loadDocument, saveDocument } from "./store";
+import { clearDocument, loadDocument, loadPrefs, saveDocument, savePrefs } from "./store";
 import { exportOutlineMarkdown, outlineFilename } from "./exportMarkdown";
 
 type Refs = {
   titleInput: HTMLInputElement;
   headerActions: HTMLElement;
+  showTextInput: HTMLInputElement;
   importView: HTMLElement;
   importText: HTMLTextAreaElement;
   editor: HTMLElement;
@@ -55,6 +56,7 @@ export function mount(root: HTMLElement): void {
   root.innerHTML = shellHtml();
   const refs = bind(root);
   let doc = loadDocument();
+  let prefs = loadPrefs();
   let extendFrom: WordId | null = null;
   let dragging: PinEdge | null = null;
   let pendingTap: PendingTap | null = null;
@@ -80,6 +82,7 @@ export function mount(root: HTMLElement): void {
   }
 
   function render(opts?: { reveal?: boolean }): void {
+    refs.showTextInput.checked = prefs.showText;
     if (!doc) {
       refs.importView.hidden = false;
       refs.editor.hidden = true;
@@ -126,7 +129,7 @@ export function mount(root: HTMLElement): void {
   }
 
   function structureKey(current: Document): string {
-    return `${current.passage.id}:${current.segments
+    return `${current.passage.id}:${prefs.showText}:${current.segments
       .map(
         (segment) =>
           `${segment.id}:${segment.start}:${segment.end}:${segment.depth}:${segment.summary}`,
@@ -211,14 +214,16 @@ export function mount(root: HTMLElement): void {
           break;
         }
         case "words": {
-          appendWordRange(
-            refs.passage,
-            current,
-            breaks,
-            part.start,
-            part.end,
-            part.depth,
-          );
+          if (prefs.showText) {
+            appendWordRange(
+              refs.passage,
+              current,
+              breaks,
+              part.start,
+              part.end,
+              part.depth,
+            );
+          }
           break;
         }
         default: {
@@ -285,17 +290,31 @@ export function mount(root: HTMLElement): void {
       refs.selectionToolbar.hidden = true;
       return;
     }
-    const startEl = wordElement(doc.selection.start);
-    const endEl = wordElement(doc.selection.end);
     const wrap = refs.passage.parentElement;
-    if (!startEl || !endEl || !wrap) {
+    if (!wrap) {
       refs.selectionToolbar.hidden = true;
       return;
     }
+    const startEl = wordElement(doc.selection.start);
+    const endEl = wordElement(doc.selection.end);
+    if (startEl && endEl) {
+      placeToolbar(wrap, startEl.getBoundingClientRect(), endEl.getBoundingClientRect());
+      return;
+    }
+    if (!prefs.showText) {
+      const header = headerForSelection(doc);
+      if (header) {
+        const box = header.getBoundingClientRect();
+        placeToolbar(wrap, box, box);
+        return;
+      }
+    }
+    refs.selectionToolbar.hidden = true;
+  }
+
+  function placeToolbar(wrap: HTMLElement, startBox: DOMRect, endBox: DOMRect): void {
     refs.selectionToolbar.hidden = false;
     const origin = wrap.getBoundingClientRect();
-    const startBox = startEl.getBoundingClientRect();
-    const endBox = endEl.getBoundingClientRect();
     const rangeTop = Math.min(startBox.top, endBox.top);
     const rangeBottom = Math.max(startBox.bottom, endBox.bottom);
     const toolbar = refs.selectionToolbar;
@@ -324,6 +343,20 @@ export function mount(root: HTMLElement): void {
     toolbar.style.left = `${left}px`;
     toolbar.style.top = `${top}px`;
     toolbar.dataset.placement = placement;
+  }
+
+  function headerForSelection(current: Document): HTMLElement | null {
+    if (!current.selection) {
+      return null;
+    }
+    const matched = exactSegment(current.segments, current.selection);
+    if (!matched) {
+      return null;
+    }
+    const header = refs.passage.querySelector(
+      `[data-testid='section-header'][data-segment-id="${matched.id}"]`,
+    );
+    return header instanceof HTMLElement ? header : null;
   }
 
   function wordElement(id: WordId): HTMLSpanElement | null {
@@ -622,6 +655,11 @@ export function mount(root: HTMLElement): void {
   });
   root.querySelector("[data-export]")?.addEventListener("click", exportOutline);
   root.querySelector("[data-new]")?.addEventListener("click", newDocument);
+  refs.showTextInput.addEventListener("change", () => {
+    prefs = { showText: refs.showTextInput.checked };
+    savePrefs(prefs);
+    render();
+  });
 
   function beginTap(event: PointerEvent): void {
     if (dragging || isSelectionChrome(event)) {
@@ -775,6 +813,7 @@ function bind(root: HTMLElement): Refs {
   return {
     titleInput: requireEl(root, ".title-input", HTMLInputElement),
     headerActions: requireEl(root, ".header-actions", HTMLElement),
+    showTextInput: requireEl(root, "[data-testid='show-text-input']", HTMLInputElement),
     importView: requireEl(root, "[data-import]", HTMLElement),
     importText: requireEl(root, "[data-import-text]", HTMLTextAreaElement),
     editor: requireEl(root, "[data-editor]", HTMLElement),
@@ -799,6 +838,10 @@ function shellHtml(): string {
           <input class="title-input" type="text" placeholder="Untitled" hidden data-testid="title-input" />
         </div>
         <div class="header-actions" hidden>
+          <label class="show-text" data-testid="show-text">
+            <input type="checkbox" checked data-testid="show-text-input" />
+            Show text
+          </label>
           <button type="button" class="secondary" data-export data-testid="export">Export</button>
           <button type="button" class="ghost" data-new data-testid="new-document">New</button>
         </div>

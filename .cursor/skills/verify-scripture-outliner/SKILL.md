@@ -1,6 +1,6 @@
 ---
 name: verify-scripture-outliner
-description: Drive the Scripture Outliner Vite PWA in a real browser (Playwright + Chrome against `vite preview` at 390×844). Use when proving import, word selection, pins, inline headers, nested outline depth, summaries, or localStorage persistence.
+description: Drive the Scripture Outliner Vite PWA in a real browser (Playwright + Chrome against `vite preview` at 390×844). Use when proving import, word selection, pins, inline headers, nested outline depth, summaries, Show text, or localStorage persistence.
 ---
 
 # Verify Scripture Outliner
@@ -50,7 +50,7 @@ Harness: Playwright Core + system Chrome (`CHROME_PATH` or `/usr/local/bin/googl
 node .cursor/skills/verify-scripture-outliner/scripts/drive.mjs <feature-id>
 ```
 
-`drive.mjs` installs `playwright-core` into `scripts/node_modules` on first use. It always clears `localStorage` key `scripture-outliner.document.v1` and reloads before the feature, so recipes start from the import screen.
+`drive.mjs` installs `playwright-core` into `scripts/node_modules` on first use. It always clears `localStorage` keys `scripture-outliner.document.v1` and `scripture-outliner.prefs.v1` and reloads before the feature, so recipes start from the import screen with **Show text** on.
 
 Stable handles (prefer `data-testid`):
 
@@ -74,12 +74,14 @@ Stable handles (prefer `data-testid`):
 | *(removed)* `action-section` `action-bar` `action-clear` | Section (H), sticky bar, and Clear are gone. Deeper creates structure on loose text. Margin / outside tap deselects. |
 | `summary-dialog` `summary-field` `summary-save` `summary-cancel` | Summary modal |
 | `export` `new-document` | Header actions |
+| `show-text` | Clickable **Show text** label in `.header-actions` (44px min tap height) |
+| `show-text-input` | The checkbox inside that label. Checked by default. |
 
 Do not click words by CSS `.word` index in new recipes if a `data-word-id` is known. After **Load sample**, word id `0` is `The`.
 
 Feature recipes live in [`features/`](features/README.md). Drive the mapped entry points, not a shortcut.
 
-There is no Text / Outline / Split toggle and no separate outline pane.
+There is no Text / Outline / Split toggle and no separate outline pane. **Show text** only hides body words. It is an app pref in `scripture-outliner.prefs.v1` (default on). Drive clears that key.
 
 ## Evidence
 
@@ -95,12 +97,12 @@ Proof standards:
 
 - Exercise the real click/type path. Reloading after Deeper is how persistence is proved, not reading the store module.
 - Capture action and resulting state (empty import → sample loaded; tap → `.selected` + visible pins).
-- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; no `section-header` after Deeper alone; `section-header` nodes after a non-empty Summary save.
+- Side effects: `localStorage` key `scripture-outliner.document.v1` after import; `scripture-outliner.prefs.v1` after toggling Show text; no `section-header` after Deeper alone; `section-header` nodes after a non-empty Summary save.
 - No mocks. This app has no backend.
 
 Seeded proof from the first skill run: `evidence/import-sample/`.
 
-**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone. Inline-outline PRs must show (1) a bold section header in the passage, (2) a nested indented subsection, and (3) depth ≥ 2 when practical. Nested body text must share the passage color. Only `.selected` may tint words. Icon-toolbar PRs must show the icon hint including the Delete X, without a Section (H) button.
+**Standing rule:** every future feature PR must include a screenshot or screen recording as proof of the change (390×844 for UI). Attach it in the PR (evidence path and/or walkthrough artifact). Do not merge interaction changes on description alone. Inline-outline PRs must show (1) a bold section header in the passage, (2) a nested indented subsection, and (3) depth ≥ 2 when practical. Nested body text must share the passage color. Only `.selected` may tint words. Icon-toolbar PRs must show the icon hint including the Delete X, without a Section (H) button. Show-text PRs must include 390×844 screenshots with (a) toggle on and body visible and (b) toggle off and headers only.
 
 ## Cleanup
 
@@ -125,4 +127,4 @@ All under `.cursor/skills/verify-scripture-outliner/scripts/`:
 
 `scripts/common.sh` is sourced by the shell helpers. `scripts/package.json` pins `playwright-core`. `scripts/node_modules` is local to the skill and gitignored.
 
-Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`, `icon-toolbar`.
+Known feature ids: `import-sample`, `word-selection`, `deselect-outside`, `section-deeper-summary`, `inline-outline`, `persistence`, `header-select`, `icon-toolbar`, `show-text`.

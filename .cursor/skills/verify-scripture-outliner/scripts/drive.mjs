@@ -3,7 +3,7 @@
  * Drive Scripture Outliner in Chrome via Playwright against the launched preview.
  *
  * Usage: node drive.mjs <feature-id>
- * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar
+ * Features: import-sample | word-selection | deselect-outside | section-deeper-summary | inline-outline | persistence | header-select | icon-toolbar | show-text
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -67,7 +67,10 @@ async function openPage(url) {
   const errors = [];
   page.on("pageerror", (err) => errors.push(err.message));
   await page.goto(url, { waitUntil: "networkidle" });
-  await page.evaluate(() => localStorage.removeItem("scripture-outliner.document.v1"));
+  await page.evaluate(() => {
+    localStorage.removeItem("scripture-outliner.document.v1");
+    localStorage.removeItem("scripture-outliner.prefs.v1");
+  });
   await page.reload({ waitUntil: "networkidle" });
   return { browser, page, errors };
 }
@@ -721,6 +724,156 @@ async function drivePersistence(page) {
   return { title, headers, after };
 }
 
+async function nestedOutlineRange(page) {
+  await clickWordId(page, 0);
+  await clickWordId(page, 24);
+  await page.getByTestId("action-deeper").click();
+  await waitForExactSegment(page);
+  await saveSummary(page, "The LORD is shepherd");
+  await page.locator('[data-testid="section-header"][data-depth="0"]').waitFor();
+  await clickWordId(page, 9);
+  await clickWordId(page, 24);
+  await page.getByTestId("action-deeper").click();
+  await waitForExactSegment(page);
+  await saveSummary(page, "Green pastures");
+  await page.locator('[data-testid="section-header"][data-depth="1"]').waitFor();
+  await clickWordId(page, 18);
+  await clickWordId(page, 24);
+  await page.getByTestId("action-deeper").click();
+  await waitForExactSegment(page);
+  await saveSummary(page, "Still waters");
+  await page.locator('[data-testid="section-header"][data-depth="2"]').waitFor();
+}
+
+async function headerPaddingByDepth(page) {
+  return page.getByTestId("section-header").evaluateAll((headers) =>
+    headers.map((header) => ({
+      depth: header.getAttribute("data-depth"),
+      text: header.textContent ?? "",
+      paddingLeft: Number.parseFloat(getComputedStyle(header).paddingLeft),
+    })),
+  );
+}
+
+async function storedPrefs(page) {
+  return page.evaluate(() => {
+    const raw = localStorage.getItem("scripture-outliner.prefs.v1");
+    if (!raw) {
+      return null;
+    }
+    return JSON.parse(raw);
+  });
+}
+
+async function driveShowText(page) {
+  await driveImportSample(page);
+  await nestedOutlineRange(page);
+  await deselectByMargin(page);
+  const checkbox = page.getByTestId("show-text-input");
+  const label = page.getByTestId("show-text");
+  if (!(await checkbox.isChecked())) {
+    throw new Error("Show text should be checked by default");
+  }
+  const labelText = ((await label.innerText()) ?? "").replace(/\s+/g, " ").trim();
+  if (labelText !== "Show text") {
+    throw new Error(`Expected label "Show text", got ${JSON.stringify(labelText)}`);
+  }
+  const tap = await label.boundingBox();
+  if (!tap || tap.height < 44) {
+    throw new Error(`Show text tap target height is ${tap?.height}, expected >= 44`);
+  }
+  const wordsOn = await page.getByTestId("word").count();
+  if (wordsOn <= 0) {
+    throw new Error("Expected body words with Show text on");
+  }
+  const headersOn = await page.getByTestId("section-header").count();
+  if (headersOn < 2) {
+    throw new Error(`Expected at least two headers, got ${headersOn}`);
+  }
+  const heading = ((await page.getByTestId("app-title").textContent()) ?? "").trim();
+  if (heading !== "Scripture Outliner") {
+    throw new Error(`Expected heading Scripture Outliner, got ${JSON.stringify(heading)}`);
+  }
+  const textOn = await snapshot(page, path.join(evidenceRoot, "show-text"), "text-on", {
+    step: "text-on",
+    words: wordsOn,
+    headers: headersOn,
+  });
+  await checkbox.uncheck();
+  if (await checkbox.isChecked()) {
+    throw new Error("Show text should be unchecked after toggle");
+  }
+  const wordsOff = await page.getByTestId("word").count();
+  if (wordsOff !== 0) {
+    throw new Error(`Expected 0 word nodes with Show text off, got ${wordsOff}`);
+  }
+  const headersOff = await page.getByTestId("section-header").count();
+  if (headersOff !== headersOn) {
+    throw new Error(`Headers changed after hiding text (${headersOn} → ${headersOff})`);
+  }
+  const paddings = await headerPaddingByDepth(page);
+  const d0 = paddings.find((entry) => entry.depth === "0");
+  const d1 = paddings.find((entry) => entry.depth === "1");
+  if (!d0 || !d1) {
+    throw new Error(`Expected depth 0 and 1 headers, got ${JSON.stringify(paddings)}`);
+  }
+  if (d1.paddingLeft <= d0.paddingLeft) {
+    throw new Error(`Depth 1 should indent more than depth 0: ${JSON.stringify(paddings)}`);
+  }
+  const textOff = await snapshot(page, path.join(evidenceRoot, "show-text"), "text-off", {
+    step: "text-off",
+    words: wordsOff,
+    headers: headersOff,
+    paddings,
+  });
+  await page.getByTestId("section-header").first().click();
+  if (!(await page.getByTestId("selection-toolbar").isVisible())) {
+    throw new Error("Selection toolbar should be visible after a header tap with text off");
+  }
+  if ((await page.getByTestId("pin-start").getAttribute("hidden")) === null) {
+    throw new Error("Start pin should be hidden when words are absent");
+  }
+  if ((await page.getByTestId("pin-end").getAttribute("hidden")) === null) {
+    throw new Error("End pin should be hidden when words are absent");
+  }
+  await page.reload({ waitUntil: "networkidle" });
+  await page.getByTestId("passage").waitFor({ state: "visible" });
+  if (await page.getByTestId("show-text-input").isChecked()) {
+    throw new Error("Show text should stay unchecked after reload");
+  }
+  const wordsAfterReload = await page.getByTestId("word").count();
+  if (wordsAfterReload !== 0) {
+    throw new Error(`Expected 0 words after reload with text off, got ${wordsAfterReload}`);
+  }
+  const headersAfterReload = await page.getByTestId("section-header").count();
+  if (headersAfterReload !== headersOn) {
+    throw new Error(`Headers lost on reload (${headersOn} → ${headersAfterReload})`);
+  }
+  const prefs = await storedPrefs(page);
+  if (!prefs || prefs.showText !== false) {
+    throw new Error(`Expected prefs showText false, got ${JSON.stringify(prefs)}`);
+  }
+  await page.getByTestId("show-text-input").check();
+  await page.getByTestId("word").first().waitFor();
+  const wordsRestored = await page.getByTestId("word").count();
+  if (wordsRestored <= 0) {
+    throw new Error("Expected body words after checking Show text");
+  }
+  if (!(await page.getByTestId("show-text-input").isChecked())) {
+    throw new Error("Show text should be checked after restoring text");
+  }
+  return {
+    wordsOn,
+    headersOn,
+    wordsOff,
+    paddings,
+    prefs,
+    wordsRestored,
+    textOn,
+    textOff,
+  };
+}
+
 async function driveIconToolbar(page) {
   await driveImportSample(page);
   await clickWordId(page, 0);
@@ -751,6 +904,7 @@ const drivers = {
   persistence: drivePersistence,
   "header-select": driveHeaderSelect,
   "icon-toolbar": driveIconToolbar,
+  "show-text": driveShowText,
 };
 
 ensurePlaywright();

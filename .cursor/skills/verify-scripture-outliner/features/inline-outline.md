@@ -34,5 +34,5 @@ Preconditions:
 
 - Tapping a word inside an already-selected covering segment shrinks to that word (so you can mark an inner range). Do not tap a word outside the parent if you intend to nest.
 - Headers rebuild the passage DOM. Wait for `section-header` after each **Summary** save, not after Deeper.
-- There is no outline list and no view toggle. Do not look for `outline-row` or `view-split`.
+- There is no outline list and no Text / Outline / Split toggle. Do not look for `outline-row` or `view-split`. **Show text** only hides body words. It is not a second outline view.
 - Inner overflow does not expand a `fullPage` screenshot. Set the passage pane `scrollTop` to 0 before capturing nested headers.
