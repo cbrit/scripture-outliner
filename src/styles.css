@@ -9,10 +9,6 @@
   --cream: #fcf8f0;
   --gold: #e8c56b;
   --sel: #f3d98a;
-  --seg0: #c9d6cc;
-  --seg1: #dde6c4;
-  --seg2: #e6dfc2;
-  --seg3: #e6d3c0;
   --indent: 1.15em;
   --line: #ddd4c4;
   --danger: #8b3a32;
@@ -319,26 +315,6 @@ button.danger {
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
   text-decoration-color: color-mix(in srgb, var(--forest) 55%, var(--gold));
-}
-
-.word.seg-0,
-.gap.seg-0 {
-  background: var(--seg0);
-}
-
-.word.seg-1,
-.gap.seg-1 {
-  background: var(--seg1);
-}
-
-.word.seg-2,
-.gap.seg-2 {
-  background: var(--seg2);
-}
-
-.word.seg-3,
-.gap.seg-3 {
-  background: var(--seg3);
 }
 
 .word.selected,

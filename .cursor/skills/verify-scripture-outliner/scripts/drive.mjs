@@ -179,6 +179,93 @@ async function headerDepths(page) {
   );
 }
 
+function isTransparentColor(value) {
+  const compact = value.replace(/\s+/g, "");
+  return (
+    compact === "transparent" ||
+    compact === "rgba(0,0,0,0)" ||
+    compact === "rgb(0,0,0,0)" ||
+    /^rgba\(\d+,\d+,\d+,0(?:\.0+)?\)$/.test(compact)
+  );
+}
+
+async function assertNoHierarchyTints(page) {
+  const offenders = await page.locator(".word, .gap").evaluateAll((nodes) =>
+    nodes
+      .filter((el) => /\bseg-[0-3]\b/.test(el.className))
+      .map((el) => ({
+        className: el.className,
+        wordId: el.getAttribute("data-word-id"),
+        before: el.getAttribute("data-before"),
+      })),
+  );
+  if (offenders.length) {
+    throw new Error(
+      `Hierarchy tint classes still present: ${JSON.stringify(offenders.slice(0, 8))}`,
+    );
+  }
+}
+
+async function wordPaint(page, ids) {
+  return page.evaluate((wordIds) => {
+    return wordIds.map((id) => {
+      const el = document.querySelector(`[data-word-id="${id}"]`);
+      if (!(el instanceof HTMLElement)) {
+        throw new Error(`Missing word ${id}`);
+      }
+      return {
+        id,
+        backgroundColor: getComputedStyle(el).backgroundColor,
+        selected: el.classList.contains("selected"),
+      };
+    });
+  }, ids);
+}
+
+async function assertUniformBodyPaint(page, ids) {
+  await assertNoHierarchyTints(page);
+  const paints = await wordPaint(page, ids);
+  const selected = paints.filter((entry) => entry.selected);
+  if (selected.length) {
+    throw new Error(`Expected no selection on body paint check, got ${JSON.stringify(selected)}`);
+  }
+  const colors = new Set(paints.map((entry) => entry.backgroundColor));
+  if (colors.size !== 1) {
+    throw new Error(`Body colors differ by hierarchy: ${JSON.stringify(paints)}`);
+  }
+  if (!isTransparentColor(paints[0].backgroundColor)) {
+    throw new Error(`Unselected body should use passage color, got ${JSON.stringify(paints)}`);
+  }
+  return paints;
+}
+
+async function assertSelectionFill(page, startId, endId) {
+  const selectedIds = [];
+  for (let id = startId; id <= endId; id += 1) {
+    selectedIds.push(id);
+  }
+  const paints = await wordPaint(page, selectedIds);
+  const missing = paints.filter((entry) => !entry.selected);
+  if (missing.length) {
+    throw new Error(`Expected selected ${startId}–${endId}, missing ${JSON.stringify(missing)}`);
+  }
+  const opaque = paints.filter((entry) => !isTransparentColor(entry.backgroundColor));
+  if (opaque.length !== paints.length) {
+    throw new Error(`Selection fill missing on ${JSON.stringify(paints)}`);
+  }
+  const colors = new Set(opaque.map((entry) => entry.backgroundColor));
+  if (colors.size !== 1) {
+    throw new Error(`Selection fill is not continuous: ${JSON.stringify(paints)}`);
+  }
+  if (endId > startId) {
+    const filledGaps = await page.locator(".gap.selected").count();
+    if (filledGaps < 1) {
+      throw new Error("Expected highlighted spaces between selected words");
+    }
+  }
+  return paints;
+}
+
 async function driveImportSample(page) {
   const importView = page.getByTestId("import-view");
   if (!(await importView.isVisible())) {
@@ -317,15 +404,18 @@ async function driveWordSelection(page) {
   if (rangeCount < 2) {
     throw new Error(`Expected an extended range, got ${rangeCount} selected words`);
   }
-  const filledGaps = await page.locator(".gap.selected").count();
-  if (filledGaps < 1) {
-    throw new Error("Expected highlighted spaces between selected words");
+  await assertNoHierarchyTints(page);
+  const selectionPaint = await assertSelectionFill(page, 0, 4);
+  const outside = await wordPaint(page, [10]);
+  if (outside[0].selected || !isTransparentColor(outside[0].backgroundColor)) {
+    throw new Error(`Unselected word should stay passage color, got ${JSON.stringify(outside)}`);
   }
   const after = await snapshot(page, path.join(evidenceRoot, "word-selection"), "range", {
     selected: rangeCount,
-    filledGaps,
+    selectionPaint,
+    outside,
   });
-  return { selected: rangeCount, filledGaps, after };
+  return { selected: rangeCount, selectionPaint, outside, after };
 }
 
 async function waitForExactSegment(page) {
@@ -455,11 +545,33 @@ async function driveInlineOutline(page) {
   ) {
     throw new Error(`Unexpected header labels: ${JSON.stringify(texts)}`);
   }
+  const bodyPaint = await assertUniformBodyPaint(page, [0, 9, 18]);
   const after = await snapshot(page, path.join(evidenceRoot, "inline-outline"), "nested", {
     depths,
     texts,
+    bodyPaint,
   });
-  return { depths, texts, before, after };
+  const innerHeader = page.locator('[data-testid="section-header"][data-depth="2"]');
+  await innerHeader.click();
+  const selectedIds = await selectedWordIds(page);
+  if (selectedIds[0] !== 18 || selectedIds[selectedIds.length - 1] !== 24) {
+    throw new Error(`Expected inner range 18–24 selected, got ${JSON.stringify(selectedIds)}`);
+  }
+  const selectionPaint = await assertSelectionFill(page, 18, 24);
+  const unselected = await wordPaint(page, [0, 9]);
+  if (unselected.some((entry) => entry.selected || !isTransparentColor(entry.backgroundColor))) {
+    throw new Error(`Unselected nested body should stay passage color, got ${JSON.stringify(unselected)}`);
+  }
+  if (unselected[0].backgroundColor !== unselected[1].backgroundColor) {
+    throw new Error(`Unselected depths still differ: ${JSON.stringify(unselected)}`);
+  }
+  const selectedShot = await snapshot(
+    page,
+    path.join(evidenceRoot, "inline-outline"),
+    "nested-selected",
+    { selected: selectedIds, selectionPaint, unselected },
+  );
+  return { depths, texts, bodyPaint, selectionPaint, before, after, selectedShot };
 }
 
 async function selectedWordIds(page) {

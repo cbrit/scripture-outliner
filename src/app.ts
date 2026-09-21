@@ -11,7 +11,6 @@ import {
   createDocument,
   createSegment,
   exactSegment,
-  highlightDepthForWord,
   innermostCoveringSegment,
   insertSegment,
   orderedSelection,
@@ -46,9 +45,6 @@ type PendingTap =
   | { kind: "word"; id: WordId; x: number; y: number }
   | { kind: "header"; id: string; x: number; y: number }
   | { kind: "empty"; x: number; y: number };
-
-const SEG_CLASSES = ["seg-0", "seg-1", "seg-2", "seg-3"] as const;
-const HIGHLIGHT_CLASSES = ["selected", ...SEG_CLASSES] as const;
 
 const ICON_SECTION = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M7 5v14M17 5v14M7 12h10"/></svg>`;
 const ICON_DEEPER = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M6 5h12M10 10h8M10 10v8M7 15l3 3 3-3"/></svg>`;
@@ -139,28 +135,9 @@ export function mount(root: HTMLElement): void {
       .join("|")}`;
   }
 
-  function highlightKind(
-    current: Document,
-    id: WordId,
-  ): (typeof HIGHLIGHT_CLASSES)[number] | null {
+  function wordSelected(current: Document, id: WordId): boolean {
     const selection = current.selection;
-    if (selection !== null && id >= selection.start && id <= selection.end) {
-      return "selected";
-    }
-    const depth = highlightDepthForWord(current.segments, id);
-    if (depth === null) {
-      return null;
-    }
-    return SEG_CLASSES[Math.min(depth, SEG_CLASSES.length - 1)] ?? "seg-3";
-  }
-
-  function applyHighlightClasses(
-    el: HTMLElement,
-    kind: (typeof HIGHLIGHT_CLASSES)[number] | null,
-  ): void {
-    for (const cls of HIGHLIGHT_CLASSES) {
-      el.classList.toggle(cls, kind === cls);
-    }
+    return selection !== null && id >= selection.start && id <= selection.end;
   }
 
   function renderPassage(): void {
@@ -178,35 +155,35 @@ export function mount(root: HTMLElement): void {
     const wordCount = current.passage.words.length;
     for (const el of words) {
       const id = Number(el.dataset.wordId);
-      const kind = highlightKind(current, id);
-      applyHighlightClasses(el, kind);
-      const prevKind = id > 0 ? highlightKind(current, id - 1) : null;
-      const nextKind = id + 1 < wordCount ? highlightKind(current, id + 1) : null;
+      const selected = wordSelected(current, id);
+      el.classList.toggle("selected", selected);
+      const prevSelected = id > 0 && wordSelected(current, id - 1);
+      const nextSelected =
+        id + 1 < wordCount && wordSelected(current, id + 1);
       const breakHere = breaks[id] ?? "space";
       const nextBreak =
         id + 1 < wordCount ? (breaks[id + 1] ?? "space") : "none";
       const runStart =
-        kind !== null &&
-        (prevKind !== kind ||
+        selected &&
+        (!prevSelected ||
           breakHere === "newline" ||
           breakHere === "par" ||
           breakHere === "none");
       const runEnd =
-        kind !== null &&
-        (nextKind !== kind || nextBreak === "newline" || nextBreak === "par");
+        selected &&
+        (!nextSelected || nextBreak === "newline" || nextBreak === "par");
       el.classList.toggle("hl-start", runStart);
       el.classList.toggle("hl-end", runEnd);
     }
     for (const gap of refs.passage.querySelectorAll<HTMLSpanElement>(".gap")) {
       const beforeId = Number(gap.dataset.before);
       if (!Number.isInteger(beforeId) || beforeId <= 0) {
-        applyHighlightClasses(gap, null);
+        gap.classList.toggle("selected", false);
         continue;
       }
-      const left = highlightKind(current, beforeId - 1);
-      const right = highlightKind(current, beforeId);
-      const fill = left !== null && left === right;
-      applyHighlightClasses(gap, fill ? left : null);
+      const fill =
+        wordSelected(current, beforeId - 1) && wordSelected(current, beforeId);
+      gap.classList.toggle("selected", fill);
     }
     for (const header of refs.passage.querySelectorAll<HTMLElement>(
       "[data-testid='section-header']",
