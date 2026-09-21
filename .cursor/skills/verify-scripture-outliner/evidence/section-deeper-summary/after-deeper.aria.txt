@@ -1,12 +1,14 @@
 title: Scripture Outliner
 url: http://127.0.0.1:4173/
 h1: Scripture Outliner
-extra: {"step":"icon-toolbar","actions":["action-deeper","action-shallower","action-summary","action-delete"]}
+extra: {"step":"deeper-no-header","headers":0}
 ---
 SCRIPTURE OUTLINER
 Export
 New
-The LORD is my shepherd; I shall not want.
+The
+LORD is my shepherd; I shall
+not want.
 He maketh me to lie down in green pastures: he leadeth me beside the still waters.
 He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.
 Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.

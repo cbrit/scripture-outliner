@@ -12,14 +12,15 @@
     "summaries": [
       "Shepherd care"
     ],
-    "afterSection": {
-      "png": "evidence/section-deeper-summary/after-section.png",
-      "aria": "evidence/section-deeper-summary/after-section.aria.txt"
+    "afterDeeper": {
+      "png": "evidence/section-deeper-summary/after-deeper.png",
+      "aria": "evidence/section-deeper-summary/after-deeper.aria.txt"
     },
     "afterSummary": {
       "png": "evidence/section-deeper-summary/after-summary.png",
       "aria": "evidence/section-deeper-summary/after-summary.aria.txt"
-    }
+    },
+    "shallowerDepth": "0"
   },
-  "at": "2026-09-20T22:27:07.973Z"
+  "at": "2026-09-21T01:48:23.171Z"
 }
